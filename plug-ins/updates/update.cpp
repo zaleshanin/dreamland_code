@@ -144,6 +144,9 @@ void room_to_save( Room * room )
     if ( room == 0 )
         return;
 
+    if (room->isInstance())
+        return;
+        
     if ( room->vnum < 0
             || room->vnum >= MAX_VNUM )
     {

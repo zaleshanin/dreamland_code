@@ -87,6 +87,7 @@ class XMLDocument;
 class AreaBehavior;
 typedef ::Pointer<XMLDocument> XMLDocumentPointer;
 typedef map<DLString, DLString> Properties;
+typedef map<int, Room *> RoomVnumMap;
 
 
 /* RT ASCII conversions -- used so we can have letters in this file */

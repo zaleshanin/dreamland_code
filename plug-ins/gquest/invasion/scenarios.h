@@ -13,6 +13,7 @@
 
 #include "objects.h"
 #include "mobiles.h"
+#include "mercdb.h"
 
 class Room;
 struct area_data;

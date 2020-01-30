@@ -6,6 +6,7 @@
 #define QUESTMODELS_H
 
 #include "quest.h"
+#include "mercdb.h"
 
 class VnumList;
 struct obj_index_data;

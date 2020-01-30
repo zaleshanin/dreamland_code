@@ -9,6 +9,7 @@
 
 #include "xmlvector.h"
 #include "logstream.h"
+#include "mercdb.h"
 #define log(x) LogStream::sendNotice() << "Gangsters: " << x << endl
 
 

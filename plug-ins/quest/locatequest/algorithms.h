@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "dlobject.h"
+#include "mercdb.h"
 
 class Room;
 class PCharacter;
