@@ -89,7 +89,6 @@ Room * RoomWrapper::getTarget( ) const
     return WrapperManager::getThis( )->getWrapper(target->x); \
 }
 
-GETWRAP( rnext, "указывает на след. комнату в глобальном списке .room_list" )
 GETWRAP( contents, "указывает на первый предмет на полу комнаты" )
 GETWRAP( people, "указывает на первого чара в комнате" )
 
@@ -131,6 +130,21 @@ NMI_GET(RoomWrapper, ppl, "список (List) всех чаров в комна
     obj->setHandler(rc);
 
     return Register( obj );
+}
+
+NMI_GET(RoomWrapper, rnext, "следующая комната в списке room_list")
+{
+    checkTarget();
+
+    RoomList::const_iterator myself = std::find(roomPrototypes.begin(), roomPrototypes.end(), target);
+    if (myself == roomPrototypes.end())
+        return Register();
+
+    myself++;
+    if (myself == roomPrototypes.end())
+        return Register();
+
+    return WrapperManager::getThis( )->getWrapper(*myself);
 }
 
 NMI_GET( RoomWrapper, items, "список (List) всех предметов на полу" )
@@ -623,7 +637,7 @@ typedef RoomRoadsIterator<FeniaDoorFunc, FeniaExtraExitFunc, FeniaPortalFunc>
 
 struct PathWithDepthComplete {
     typedef NodesEntry<RoomTraverseTraits> MyNodesEntry;
-    PathWithDepthComplete( int d, RegList::Pointer r ) : depth( d ), rooms( r ) 
+    PathWithDepthComplete( int d, RegList::Pointer r ) : depth( d ), myrooms( r ) 
     { 
     }
 
@@ -633,19 +647,19 @@ struct PathWithDepthComplete {
             return false;
 
         for (const MyNodesEntry *i = head; i->prev; i = i->prev) 
-            rooms->push_front( WrapperManager::getThis( )->getWrapper( i->node ) );
+            myrooms->push_front( WrapperManager::getThis( )->getWrapper( i->node ) );
 
         return true;
     }
 
     int depth;
-    RegList::Pointer rooms;
+    RegList::Pointer myrooms;
 };
 
 struct PathToTargetComplete {
     typedef NodesEntry<RoomTraverseTraits> MyNodesEntry;
     
-    PathToTargetComplete( Room *t, RegList::Pointer r ) : target( t ), rooms( r ) 
+    PathToTargetComplete( Room *t, RegList::Pointer r ) : target( t ), myrooms( r ) 
     { 
     }
 
@@ -655,13 +669,13 @@ struct PathToTargetComplete {
             return false;
         
         for (const MyNodesEntry *i = head; i->prev; i = i->prev) 
-            rooms->push_front( WrapperManager::getThis( )->getWrapper( i->node ) );
+            myrooms->push_front( WrapperManager::getThis( )->getWrapper( i->node ) );
 
         return true;
     }
     
     Room *target;
-    RegList::Pointer rooms;
+    RegList::Pointer myrooms;
 };
 
 NMI_INVOKE( RoomWrapper, traverse, "(depth, walker, sectorsAllow, sectorsDeny): построит путь (список комнат) для чара walker глубины depth, с разрешенными-запрещенными типами местности в виде битовых масок" )
@@ -683,13 +697,13 @@ NMI_INVOKE( RoomWrapper, traverse, "(depth, walker, sectorsAllow, sectorsDeny): 
     FeniaPortalFunc pf;
     FeniaHookIterator iter( df, eef, pf, 5 );
     
-    RegList::Pointer rooms( NEW );
-    PathWithDepthComplete complete( depth, rooms );
+    RegList::Pointer myrooms( NEW );
+    PathWithDepthComplete complete( depth, myrooms );
 
     room_traverse( target, iter, complete, 10000 );
 
     Scripting::Object *obj = &Scripting::Object::manager->allocate( );
-    obj->setHandler( rooms );
+    obj->setHandler( myrooms );
 
     return Scripting::Register( obj );
 }
@@ -713,13 +727,13 @@ NMI_INVOKE( RoomWrapper, traverseTo, "(target, walker, sectorsAllow, sectorsDeny
     FeniaPortalFunc pf;
     FeniaHookIterator iter( df, eef, pf, 5 );
     
-    RegList::Pointer rooms( NEW );
-    PathToTargetComplete complete( targetRoom, rooms );
+    RegList::Pointer myrooms( NEW );
+    PathToTargetComplete complete( targetRoom, myrooms );
 
     room_traverse( target, iter, complete, 10000 );
 
     Scripting::Object *obj = &Scripting::Object::manager->allocate( );
-    obj->setHandler( rooms );
+    obj->setHandler( myrooms );
 
     return Scripting::Register( obj );
 }

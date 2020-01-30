@@ -57,32 +57,29 @@ bool InvasionScenario::checkArea( AREA_DATA *area )
 /*--------------------------------------------------------------------------
  * Sparse Scenario 
  *-------------------------------------------------------------------------*/
-void InvasionSparseScenario::collectRooms( vector<Room *>& rooms, int mobCnt )
+void InvasionSparseScenario::collectRooms( RoomVector& myrooms, int mobCnt )
 {
-    Room *room;
-    
-    for (room = room_list; room; room = room->rnext) {
+    for (auto room: roomPrototypes) {
         if (!checkArea( room->area ))
             continue;
         
         if (!checkRoom( room ))
             continue;
         
-        rooms.push_back( room );
+        myrooms.push_back( room );
     }
 }   
 
 /*--------------------------------------------------------------------------
  * Dense Scenario 
  *-------------------------------------------------------------------------*/
-void InvasionDenseScenario::collectRooms( vector<Room *>& rooms, int mobCnt )
+void InvasionDenseScenario::collectRooms( RoomVector& myrooms, int mobCnt )
 {
-    Room *room;
-    typedef map<AREA_DATA *, vector<Room *> > RoomsByArea;
+    typedef map<AREA_DATA *, RoomVector> RoomsByArea;
     RoomsByArea goodRooms;
     int areaCnt;
     
-    for (room = room_list; room; room = room->rnext) {
+    for (auto room: roomPrototypes) {
         if (!checkArea( room->area )) 
             continue;
             
@@ -104,7 +101,7 @@ void InvasionDenseScenario::collectRooms( vector<Room *>& rooms, int mobCnt )
         
         if ((int)it->second.size( ) >= mobCnt / areaCnt) {
             for (j = 0; j < it->second.size( ); j++)
-                rooms.push_back( it->second[j] );
+                myrooms.push_back( it->second[j] );
 
             areaCnt--;
         }

@@ -48,7 +48,7 @@ InvasionGQuest::~InvasionGQuest( )
 void InvasionGQuest::create( const GlobalQuest::Config &config )  
 {
     int mobCnt, objCnt, helpCnt;
-    std::vector<Room *> rooms;
+    RoomVector myrooms;
     InvasionGQuestInfo::Scenarios::iterator iter;
     InvasionScenario *scen;
     
@@ -94,48 +94,48 @@ void InvasionGQuest::create( const GlobalQuest::Config &config )
     if (!scen->vnumHelpers.empty( ))
         helpCnt = max( 20, number_range( playerCnt * 2, playerCnt * 3 ) );
     
-    scen->collectRooms( rooms, mobCnt + objCnt + helpCnt);
+    scen->collectRooms( myrooms, mobCnt + objCnt + helpCnt);
     
-    if ((int)rooms.size( ) < mobCnt + objCnt + helpCnt)
+    if ((int)myrooms.size( ) < mobCnt + objCnt + helpCnt)
         throw GQCannotStartException("not enough rooms");
         
-    log("mobiles " << mobCnt << ", objects " << objCnt << ", helpers " << helpCnt << ", rooms " << rooms.size( ));
+    log("mobiles " << mobCnt << ", objects " << objCnt << ", helpers " << helpCnt << ", rooms " << myrooms.size( ));
     
     try {
         int i;
         NPCharacter *mob;
 
-        while (!rooms.empty( ) && mobCnt > 0) {
+        while (!myrooms.empty( ) && mobCnt > 0) {
             mob = createMob( );
-            i = number_range( 0, rooms.size( ) - 1 );
-            char_to_room( mob, rooms[i] );
+            i = number_range( 0, myrooms.size( ) - 1 );
+            char_to_room( mob, myrooms[i] );
 
-            if (mob->canEnter( rooms[i] )) 
+            if (mob->canEnter( myrooms[i] )) 
                 mobCnt--;
             else 
                 extract_char( mob );
             
-            rooms.erase( rooms.begin( ) + i );
+            myrooms.erase( myrooms.begin( ) + i );
         }
 
-        while (!rooms.empty( ) && objCnt > 0) {
-            i = number_range( 0, rooms.size( ) - 1 );
-            obj_to_room( createObj( ), rooms[i] );
+        while (!myrooms.empty( ) && objCnt > 0) {
+            i = number_range( 0, myrooms.size( ) - 1 );
+            obj_to_room( createObj( ), myrooms[i] );
             objCnt--;
-            rooms.erase( rooms.begin( ) + i );
+            myrooms.erase( myrooms.begin( ) + i );
         }
 
-        while (!rooms.empty( ) && helpCnt > 0) {
+        while (!myrooms.empty( ) && helpCnt > 0) {
             mob = createHelper( );
-            i = number_range( 0, rooms.size( ) - 1 );
-            char_to_room( mob, rooms[i] );
+            i = number_range( 0, myrooms.size( ) - 1 );
+            char_to_room( mob, myrooms[i] );
 
-            if (mob->canEnter( rooms[i] )) 
+            if (mob->canEnter( myrooms[i] )) 
                 helpCnt--;
             else 
                 extract_char( mob );
             
-            rooms.erase( rooms.begin( ) + i );
+            myrooms.erase( myrooms.begin( ) + i );
         }
     }
     catch (const Exception& e) {

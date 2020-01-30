@@ -92,6 +92,7 @@ void WorldKnowledge::visit( PCharacter *ch )
 void WorldKnowledge::report( PCharacter *ch, ostringstream &buf )
 {
     int cnt = visits[ch->getID( )].size( );
+    int top_room = roomPrototypes.size();
     
     buf << "Visited " << cnt * 100 / top_room << "% rooms "
         << "(" << cnt << " of " << top_room << ")" << endl;

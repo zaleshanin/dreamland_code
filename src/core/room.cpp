@@ -21,8 +21,7 @@ CLAN(none);
 PROF(none);
 
 Room::Room( ) : 
-                next( 0 ), rnext( 0 ),
-                aff_next( 0 ), reset_first( 0 ), reset_last( 0 ),
+                reset_first( 0 ), reset_last( 0 ),
                 people( 0 ), contents( 0 ), extra_descr( 0 ),
                 area( 0 ), extra_exit( 0 ),
                 name( 0 ), description( 0 ), owner( 0 ),
@@ -120,3 +119,7 @@ bool Room::isDark( ) const
     return true;
 }
 
+bool Room::isInstance() const
+{
+    return !instance.empty();
+}

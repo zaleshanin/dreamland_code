@@ -205,16 +205,16 @@ void LocateQuest::scatterItems( PCharacter *pch, Room *endPoint, NPCharacter *cu
     Object *obj;
     OBJ_INDEX_DATA *pObjIndex;
     unsigned int i, count;
-    LocateAlgo::Rooms rooms;
+    RoomVector myrooms;
     const LocateScenario &scen = getScenario( );
 
     if (scen.items.empty( ))
         throw QuestCannotStartException( );
     
-    scen.findRooms( pch, customer->in_room, endPoint, rooms );
+    scen.findRooms( pch, customer->in_room, endPoint, myrooms );
     count = scen.getCount( pch );
 
-    if (!count || count > rooms.size( ))
+    if (!count || count > myrooms.size( ))
         throw QuestCannotStartException( );
     
     const LSItemData &itemScen = scen.items[number_range( 0, scen.items.size( ) - 1 )];
@@ -223,13 +223,13 @@ void LocateQuest::scatterItems( PCharacter *pch, Room *endPoint, NPCharacter *cu
 
     pObjIndex = get_obj_index( LocateQuestRegistrator::getThis( )->itemVnum );
         
-    while (!rooms.empty( ) && total < (int)count) {
-        i = number_range( 0, rooms.size( ) - 1 );
+    while (!myrooms.empty( ) && total < (int)count) {
+        i = number_range( 0, myrooms.size( ) - 1 );
         obj = createItem<LocateItem>( pObjIndex );
         itemScen.dress( obj );
-        obj_to_room( obj, rooms[i] );
+        obj_to_room( obj, myrooms[i] );
         total++;
-        rooms.erase( rooms.begin( ) + i );
+        myrooms.erase( myrooms.begin( ) + i );
     }
 
     if (!total)

@@ -7,9 +7,7 @@ void debug_save_world( ) __attribute__ ((constructor));
 
 void debug_save_world( )
 {
-    Room *r;
-
-    for (r = room_list; r; r = r->rnext) {
+    for (auto r: roomPrototypes) {
         save_room_objects( r );
         save_room_mobiles( r );
     }

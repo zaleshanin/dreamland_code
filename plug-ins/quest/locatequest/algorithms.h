@@ -14,15 +14,13 @@ class PCharacter;
 
 class LocateAlgo : public virtual DLObject {
 public:
-    typedef std::vector<Room *> Rooms;
-
-    virtual void findRooms( PCharacter *, Room *, Room *, Rooms & ) const = 0;
+    virtual void findRooms( PCharacter *, Room *, Room *, RoomVector & ) const = 0;
     virtual bool needsEndPoint( ) const = 0;
 };
 
 class LocateMiddlePointAlgo : public virtual LocateAlgo {
 public:
-    virtual void findRooms( PCharacter *, Room *, Room *, Rooms & ) const;
+    virtual void findRooms( PCharacter *, Room *, Room *, RoomVector & ) const;
     virtual bool needsEndPoint( ) const;
     virtual int getRadius( ) const;
 };
@@ -30,7 +28,7 @@ public:
 class LocateRadialAlgo : public virtual LocateAlgo {
 public:
 
-    virtual void findRooms( PCharacter *, Room *, Room *, Rooms & ) const;
+    virtual void findRooms( PCharacter *, Room *, Room *, RoomVector & ) const;
     virtual bool needsEndPoint( ) const;
     virtual int getRadius( ) const;
 };
@@ -38,7 +36,7 @@ public:
 class LocateUniformAlgo: public virtual LocateAlgo {
 public:
 
-    virtual void findRooms( PCharacter *, Room *, Room *, Rooms & ) const;
+    virtual void findRooms( PCharacter *, Room *, Room *, RoomVector & ) const;
     virtual bool needsEndPoint( ) const;
 };
 

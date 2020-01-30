@@ -495,8 +495,8 @@ void reset_area( AREA_DATA *pArea )
     const char *resetmsg;
     static const char *default_resetmsg = "Ты слышишь мелодичный перезвон колокольчиков.";        
 
-    for (map<int, Room *>::iterator i = pArea->rooms.begin( ); i != pArea->rooms.end( ); i++)
-        reset_room( i->second );
+    for (auto i: pArea->rooms)
+        reset_room( i.second );
     
     if (pArea->behavior) 
         pArea->behavior->update( );

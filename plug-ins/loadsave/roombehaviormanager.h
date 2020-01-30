@@ -14,6 +14,7 @@ public:
         static void parse( Room *, FILE * );
         static void save( const Room *, FILE * );
         static void setAll( );
+        static void copy(const Room *proto, Room *instance);
 };
 
 #endif

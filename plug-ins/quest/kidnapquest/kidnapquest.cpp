@@ -238,15 +238,15 @@ const KidnapScenario & KidnapQuest::getScenario( ) const
 
 Room * KidnapQuest::findRefuge( PCharacter *hero, NPCharacter *king ) 
 {
-    RoomList rooms;
+    RoomVector myrooms;
     const KidnapScenario &scenario = getScenario( );
     
     if (!scenario.refuges.empty( )) 
-        findClientRooms( hero, rooms, scenario.refuges );
+        findClientRooms( hero, myrooms, scenario.refuges );
     else 
-        findClientRooms( hero, rooms );
+        findClientRooms( hero, myrooms );
     
-    return getDistantRoom( hero, rooms, king->in_room, 30, 3 );
+    return getDistantRoom( hero, myrooms, king->in_room, 30, 3 );
 }
 
 NPCharacter * KidnapQuest::createKing( PCharacter *hero )

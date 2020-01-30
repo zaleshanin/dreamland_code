@@ -13,14 +13,16 @@
 #include "skillreference.h"
 #include "mobilebehaviormanager.h"
 #include "objectbehaviormanager.h"
+#include "roombehaviormanager.h"
 
 #include "objectmanager.h"
 #include "affect.h"
 #include "pcharacter.h"
 #include "npcharacter.h"
 #include "npcharactermanager.h"
-#include "object.h"
+#include "core/object.h"
 #include "race.h"
+#include "room.h"
 
 #include "merc.h"
 #include "mercdb.h"
@@ -626,3 +628,130 @@ void clone_object(Object *parent, Object *clone)
 
 
 
+Room *create_room_instance(Room *proto, DLString key)
+{
+    Room *pRoom;
+
+    pRoom = new Room;
+    pRoom->instance = key;
+    pRoom->area = proto->area;
+
+    EXTRA_DESCR_DATA *ed, *ed_new;
+    for (ed = proto->extra_descr; ed != 0; ed = ed->next) {
+        ed_new = new_extra_descr();
+        ed_new->keyword         = str_dup( ed->keyword);
+        ed_new->description     = str_dup( ed->description );
+        ed_new->next            = pRoom->extra_descr;
+        pRoom->extra_descr      = ed_new;
+    }
+
+    EXTRA_EXIT_DATA *eexit;
+    for (eexit = proto->extra_exit; eexit; eexit = eexit->next) {    
+        EXTRA_EXIT_DATA *peexit = (EXTRA_EXIT_DATA*)alloc_perm(sizeof(EXTRA_EXIT_DATA));
+        
+        peexit->description = str_dup(eexit->description);
+        peexit->exit_info_default = peexit->exit_info = eexit->exit_info_default;
+        peexit->key = eexit->key;
+        peexit->u1.vnum = eexit->u1.vnum;
+        peexit->level = eexit->level;
+
+        peexit->short_desc_from = str_dup(eexit->short_desc_from);
+        peexit->short_desc_to = str_dup(eexit->short_desc_to);
+        peexit->room_description = str_dup(eexit->room_description);
+        peexit->max_size_pass = eexit->max_size_pass;
+
+        peexit->moving_from = eexit->moving_from;
+        peexit->moving_mode_from = eexit->moving_mode_from;
+        peexit->moving_to = eexit->moving_to;
+        peexit->moving_mode_to = eexit->moving_mode_to;
+
+        peexit->keyword = str_dup(eexit->keyword);
+        peexit->next = pRoom->extra_exit;
+        pRoom->extra_exit = peexit;
+    }
+
+    for (int door = 0; door < DIR_SOMEWHERE; door++) {
+        EXIT_DATA *exit = proto->exit[door];
+        if (!exit)
+            continue;
+
+        EXIT_DATA *pexit = (EXIT_DATA*)alloc_perm(sizeof(EXIT_DATA));
+    
+        pexit->keyword = str_dup(exit->keyword);
+        pexit->short_descr = str_dup(exit->short_descr);
+        pexit->description = str_dup(exit->description);
+        pexit->exit_info_default = pexit->exit_info = exit->exit_info_default;
+        pexit->key = exit->key;
+        pexit->u1.vnum = exit->u1.vnum;
+        pexit->level = 0;
+        pRoom->exit[door] = pexit;
+        pRoom->old_exit[door] = pexit;
+    }
+
+    pRoom->name = str_dup(proto->name);
+    pRoom->description = str_dup(proto->description);
+    pRoom->room_flags = pRoom->room_flags_default = proto->room_flags;
+    pRoom->sector_type = proto->sector_type;
+    pRoom->owner = &str_empty[0];
+    pRoom->heal_rate_default = pRoom->heal_rate = proto->heal_rate_default;
+    pRoom->mana_rate_default = pRoom->mana_rate = proto->mana_rate_default;
+    pRoom->clan = proto->clan;
+    pRoom->guilds.set(proto->guilds);
+    pRoom->liquid = proto->liquid;
+    pRoom->properties = proto->properties;
+    RoomBehaviorManager::copy(proto, pRoom);
+
+    return pRoom;
+}
+
+
+bool create_area_instance(AREA_DATA *area, PCMemoryInterface *player)
+{
+    DLString key = player->getName();
+
+    // Check no instance of given name already exists;
+    if (area->instances.find(key) != area->instances.end())
+        return false;
+
+    // Init new area instance for this player.
+    AreaInstance ai;
+    ai.key = key;
+    ai.area = area;
+    area->instances[key] = ai;
+    
+    // Create duplicates of all rooms in this area.
+    for (auto r: area->rooms) {
+        int vnum = r.first;
+        Room *proto = r.second;
+
+        Room *newroom = create_room_instance(proto, key);        
+        roomInstances.push_back(newroom);
+        ai.rooms[vnum] = newroom;
+    }
+
+    // Resolve room exits from virtual to real, as during initial area load.
+    for (auto r: ai.rooms) {
+        Room *room = r.second;
+        EXIT_DATA *pexit;
+
+        for (int door = 0; door <= 5; door++ ) {
+            if ((pexit = room->exit[door])) {
+                if (pexit->u1.vnum > 0)
+                    pexit->u1.to_room = get_room_instance(pexit->u1.vnum, key);
+                else
+                    pexit->u1.to_room = 0;
+            }
+        }
+
+        for (EXTRA_EXIT_DATA *peexit = room->extra_exit; peexit; peexit = peexit->next) {
+            if (peexit->u1.vnum > 0) 
+                peexit->u1.to_room = get_room_instance(peexit->u1.vnum, key);
+            else
+                peexit->u1.to_room = 0;
+        }
+    }
+
+    notice("room: created instance of area %s for player %s, %d rooms",
+            area->area_file->file_name, key.c_str(), ai.rooms.size());
+    return true;
+}

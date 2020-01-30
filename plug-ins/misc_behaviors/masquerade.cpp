@@ -120,9 +120,9 @@ bool RoamingPortal::area( )
 
     count = 0;
 
-    for (map<int, Room *>::iterator i = area->rooms.begin( ); i != area->rooms.end( ); i++) {
+    for (auto i: area->rooms) {
         if (number_range( 0, count++ ) == 0) 
-            room = i->second;
+            room = i.second;
     }
 
     if (!room)

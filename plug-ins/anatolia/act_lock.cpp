@@ -8,7 +8,7 @@
 
 #include "commandtemplate.h"
 #include "objectbehavior.h"
-#include "object.h"
+#include "core/object.h"
 #include "affect.h"
 #include "room.h"
 #include "pcharacter.h"
@@ -923,7 +923,7 @@ Keyhole::Pointer Keyhole::locate( Character *ch, Object *key )
     Keyhole::Pointer null;
     int keyVnum = key->pIndexData->vnum;
     
-    for (Room *room = room_list; room; room = room->rnext) {
+    for (auto room: roomInstances) {
         if (!ch->can_see( room ))
             continue;
 

@@ -74,10 +74,10 @@ public:
     void echo( int, const char *, ... ) const;
     void echoAround( int, const char *, ... ) const;
 
+    /** Returns true if this is a player-specific instance and not a prototype. */
+    bool isInstance() const;
+
 public:
-    Room *        next;
-    Room *        rnext;
-    Room *        aff_next;
     reset_data *reset_first;
     reset_data *reset_last;
     Character *        people;
@@ -106,6 +106,9 @@ public:
     int        affected_by;
     LiquidReference liquid;
     Properties properties;
+
+    /** Name of the player for whom this instance was created. */
+    DLString instance;
 
     XMLPersistentStreamable<RoomBehavior> behavior;
     Scripting::Register init;

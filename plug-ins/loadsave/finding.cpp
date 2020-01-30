@@ -998,3 +998,30 @@ bool text_match_with_highlight(const DLString &text, const DLString &args, ostri
 
     return found;
 }
+
+/** Find room instance belonging to this player, falling back to the prototype if none found. */
+Room * get_room_instance(int vnum, DLString key)
+{
+    // First look up the proto.
+    Room *proto = get_room_index(vnum);
+    if (!proto) {
+        bug("room: proto not found for %d %s", vnum, key.c_str());
+        return 0;
+    }
+
+    // See if this area has a copy created for the player.
+    auto ai = proto->area->instances.find(key);
+    if (ai == proto->area->instances.end()) {
+        notice("room: no instance found for %d %s, fall back to proto", vnum, key.c_str());
+        return proto;
+    }
+
+    // See if there is a room instance inside that copy.
+    auto room = ai->second.rooms.find(vnum);
+    if (room == ai->second.rooms.end()) {
+        bug("room: vnum %d not found in existing instance for %s", vnum, key.c_str());
+        return proto;
+    }
+
+    return room->second;
+}

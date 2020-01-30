@@ -61,7 +61,6 @@ AREA_DATA                *Serarea;        /* currently read area */
 RESET_DATA               *reset_first = 0;
 RESET_DATA               *reset_last = 0;
 
-bool dup_room_vnum( int vnum );
 void area_update( void );
 void        new_load_area( FILE *fp );
 void        load_helps( FILE *fp );
@@ -103,7 +102,6 @@ vnumck()
     for(alist::iterator i = areas.begin();i != areas.end();) {
         MOB_INDEX_DATA *mob;
         OBJ_INDEX_DATA *obj;
-        Room *room;
         char *aname = (*i)->name;
         int l = (*i)->min_vnum, h = (*i)->max_vnum, hashi;
         int minused = 0xFFFFL, maxused = 0;
@@ -112,21 +110,20 @@ vnumck()
             throw FileFormatException(
                 "%s: min vnum is higher then max.", aname);
         
-        for(hashi = 0;hashi < MAX_KEY_HASH;hashi++)
-            for(room = room_index_hash[hashi]; room; room = room->next) {
-                if(room->area != *i)
-                    continue;
-                
-                if(room->vnum < l || room->vnum > h)
-                    throw FileFormatException(
-                            "%s: room %d out of allocated range.", 
-                            aname, room->vnum);
-                
-                if(minused > room->vnum)
-                    minused = room->vnum;
-                if(maxused < room->vnum)
-                    maxused = room->vnum;
-            }
+        for (auto room: roomPrototypes) {
+            if(room->area != *i)
+                continue;
+            
+            if(room->vnum < l || room->vnum > h)
+                throw FileFormatException(
+                        "%s: room %d out of allocated range.", 
+                        aname, room->vnum);
+            
+            if(minused > room->vnum)
+                minused = room->vnum;
+            if(maxused < room->vnum)
+                maxused = room->vnum;
+        }
         
         for(hashi = 0;hashi < MAX_KEY_HASH;hashi++)
             for(mob = mob_index_hash[hashi]; mob; mob = mob->next) {
@@ -571,7 +568,7 @@ void fix_resets()
         }
     }
 
-    for (Room *room = room_list; room; room = room->rnext) 
+    for (auto room: roomPrototypes) 
         for(pReset = room->reset_first;pReset;pReset = pReset->next) 
             switch (pReset->command) {
             case 'G': case 'O':
@@ -603,7 +600,6 @@ void load_rooms( FILE *fp )
         int vnum;
         char letter;
         int door;
-        int iHash;
 
         letter        = fread_letter( fp );
         if ( letter != '#' )
@@ -615,11 +611,10 @@ void load_rooms( FILE *fp )
         if ( vnum == 0 )
                 break;
 
-        if (dup_room_vnum( vnum ))
+        if (roomPrototypeMap.find(vnum) != roomPrototypeMap.end())
             throw FileFormatException( "Load_rooms: vnum %d duplicated in %s", vnum, strArea );
         
         pRoomIndex = new Room;
-        pRoomIndex->rnext        = 0;
         pRoomIndex->reset_first        = 0;
         pRoomIndex->reset_last        = 0;
         pRoomIndex->owner        = str_dup("");
@@ -655,7 +650,6 @@ void load_rooms( FILE *fp )
         pRoomIndex->mana_rate = 100;
         pRoomIndex->affected = 0;
         pRoomIndex->affected_by = 0;
-        pRoomIndex->aff_next = 0;
 
         for ( ; ; )
         {
@@ -804,16 +798,10 @@ void load_rooms( FILE *fp )
         if (IS_WATER(pRoomIndex) && pRoomIndex->liquid == liq_none)
             pRoomIndex->liquid = liq_water;
 
-        iHash                        = vnum % MAX_KEY_HASH;
-        pRoomIndex->next        = room_index_hash[iHash];
-        room_index_hash[iHash]        = pRoomIndex;
-        top_room++;
-        top_vnum_room = top_vnum_room < vnum ? vnum : top_vnum_room;    /* OLC */
-
-        pRoomIndex->rnext = room_list;
-        room_list = pRoomIndex;
-
         pRoomIndex->area->rooms[vnum] = pRoomIndex;
+        roomPrototypeMap[vnum] = pRoomIndex;
+        roomPrototypes.push_back(pRoomIndex);
+        roomInstances.push_back(pRoomIndex);
 
         if (FeniaManager::wrapperManager)
             FeniaManager::wrapperManager->linkWrapper( pRoomIndex );
@@ -921,92 +909,54 @@ void load_specials( FILE *fp )
  */
 void fix_exits( bool verbose )
 {
-        Room *pRoomIndex;
         Room *to_room = 0;
         EXIT_DATA *pexit;
         EXIT_DATA *pexit_rev = 0;
         EXTRA_EXIT_DATA *peexit;
-        int iHash;
         int door;
         static const int rev_dir [] = { 2, 3, 0, 1, 5, 4 };
 
         LogStream::sendNotice( ) << "Fixing exits..." << endl;
 
-        for ( iHash = 0; iHash < MAX_KEY_HASH; iHash++ )
-        {
-                for ( pRoomIndex  = room_index_hash[iHash];
-                                        pRoomIndex != 0;
-                                        pRoomIndex  = pRoomIndex->next )
-                {
-                        bool fexit;
+        for (auto pRoomIndex: roomPrototypes) {
+            bool fexit;
 
-                        fexit = false;
+            fexit = false;
 
-                        for ( door = 0; door <= 5; door++ )
-                        {
-                                if ( ( pexit = pRoomIndex->exit[door] ) != 0 )
-                                {
-                                        if ( pexit->u1.vnum <= 0
-                                                || get_room_index(pexit->u1.vnum) == 0 )
-                                        {
-                                                pexit->u1.to_room = 0;
-                                        }
-                                        else
-                                        {
-                                                fexit = true;
-                                                pexit->u1.to_room = get_room_index( pexit->u1.vnum );
-                                        }
-                                }
-                        }
+            for ( door = 0; door <= 5; door++ )
+            {
+                    if ( ( pexit = pRoomIndex->exit[door] ) != 0 )
+                    {
+                            if ( pexit->u1.vnum <= 0
+                                    || get_room_index(pexit->u1.vnum) == 0 )
+                            {
+                                    pexit->u1.to_room = 0;
+                            }
+                            else
+                            {
+                                    fexit = true;
+                                    pexit->u1.to_room = get_room_index( pexit->u1.vnum );
+                            }
+                    }
+            }
 
-                        peexit = pRoomIndex->extra_exit;
-                        while ( peexit )
-                        {
-                                if ( peexit->u1.vnum <= 0
-                                        || get_room_index(peexit->u1.vnum) == 0 )
-                                {
-                                        peexit->u1.to_room = 0;
-                                }
-                                else
-                                {
-                                        fexit = true;
-                                        peexit->u1.to_room = get_room_index( peexit->u1.vnum );
-                                }
+            peexit = pRoomIndex->extra_exit;
+            while ( peexit )
+            {
+                    if ( peexit->u1.vnum <= 0
+                            || get_room_index(peexit->u1.vnum) == 0 )
+                    {
+                            peexit->u1.to_room = 0;
+                    }
+                    else
+                    {
+                            fexit = true;
+                            peexit->u1.to_room = get_room_index( peexit->u1.vnum );
+                    }
 
-                                peexit = peexit->next;
-                        }
-
-                        if ( !fexit )
-                                SET_BIT(pRoomIndex->room_flags,ROOM_NO_MOB);
-                
-                }
+                    peexit = peexit->next;
+            }
         }
-
-        for ( iHash = 0; iHash < MAX_KEY_HASH; iHash++ )
-        {
-                for ( pRoomIndex  = room_index_hash[iHash];
-                                        pRoomIndex != 0;
-                                        pRoomIndex  = pRoomIndex->next )
-                {
-                        for ( door = 0; door <= 5; door++ )
-                        {
-                                if ( ( pexit     = pRoomIndex->exit[door]       ) != 0
-                                        && ( to_room   = pexit->u1.to_room            ) != 0
-                                        && ( pexit_rev = to_room->exit[rev_dir[door]] ) != 0
-                                        && pexit_rev->u1.to_room != pRoomIndex
-                                        && ( pRoomIndex->vnum < 1200 || pRoomIndex->vnum > 1299 ))
-                                {
-                                    if (verbose)
-                                        LogStream::sendWarning( ) << "Fix_exits: " << pRoomIndex->vnum << ':'
-                                                << door << " -> " << to_room->vnum << ':' << rev_dir[door] << " -> "
-                                                << ( pexit_rev->u1.to_room == 0 ? 0 : pexit_rev->u1.to_room->vnum )
-                                                << '.' << endl;
-                                }
-                        }
-                }
-        }
-
-        return;
 }
 
 /*
@@ -1099,7 +1049,7 @@ static int get_obj_reset_level( AREA_DATA *pArea, int keyVnum )
     if (keyVnum <= 0 || !get_obj_index( keyVnum ))
         return pArea->low_range;
         
-    for (Room *room = room_list; room; room = room->rnext) 
+    for (auto room: roomPrototypes) 
         for(RESET_DATA *pReset = room->reset_first;pReset;pReset = pReset->next)
             switch(pReset->command) {
                 case 'M':
@@ -1137,7 +1087,7 @@ void fix_door_levels( bool verbose )
 {
     LogStream::sendNotice( ) << "Assigning door levels..." << endl;
 
-    for (Room *r = room_list; r; r = r->rnext) {
+    for (auto r: roomPrototypes) {
         for (int d = 0; d < DIR_SOMEWHERE; d++) {
             EXIT_DATA *ex = r->exit[d];
 
@@ -1327,17 +1277,6 @@ bool dup_obj_vnum( int vnum )
 
     for (pObj = obj_index_hash[vnum % MAX_KEY_HASH]; pObj; pObj = pObj->next)
         if ( pObj->vnum == vnum )
-            return true;
-
-    return false;
-}
-
-bool dup_room_vnum( int vnum )
-{
-    Room *pRoom;
-
-    for (pRoom = room_index_hash[vnum % MAX_KEY_HASH]; pRoom; pRoom = pRoom->next)
-        if ( pRoom->vnum == vnum )
             return true;
 
     return false;

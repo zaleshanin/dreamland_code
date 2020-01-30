@@ -341,7 +341,7 @@ struct editor_table_entry {
     {"room",   "redit"},
     {"object", "oedit"},
     {"mobile", "medit"},
-    {"help",   "hmedit"},
+    {"help",   "hedit"},
     {NULL, 0,}
 };
 
@@ -587,7 +587,7 @@ static int get_obj_reset_level( AREA_DATA *pArea, int keyVnum )
     if (keyVnum <= 0 || !get_obj_index( keyVnum ))
         return pArea->low_range;
         
-    for (Room *room = room_list; room; room = room->rnext) 
+    for (auto room: roomPrototypes)
         for(RESET_DATA *pReset = room->reset_first;pReset;pReset = pReset->next)
             switch(pReset->command) {
                 case 'M':
@@ -789,7 +789,7 @@ CMD(abc, 50, "", POS_DEAD, 106, LOG_ALWAYS, "")
 
         buf << "Всех неводные комнаты с упоминанием воды, без флагов indoors и near_water:" << endl;
 
-        for (Room *room = room_list; room; room = room->rnext) {
+        for (auto room: roomPrototypes) {
             if (IS_SET(room->room_flags, ROOM_INDOORS|ROOM_NEAR_WATER|ROOM_MANSION))
                 continue;
 
@@ -831,7 +831,7 @@ CMD(abc, 50, "", POS_DEAD, 106, LOG_ALWAYS, "")
         cbuf << endl << "Экстравыходы в кланах:" << endl;
 
         const DLString lineFormat = "[" + web_cmd(ch, "goto $1", "%5d") + "] %-35s{x [{C%s{x]";
-        for (Room *room = room_list; room; room = room->rnext) {
+        for (auto room: roomPrototypes) {
             ostringstream *buf;
             if (IS_SET(room->room_flags, ROOM_MANSION) || !str_prefix("ht", room->area->area_file->file_name))
                 buf = &mbuf;
@@ -1199,7 +1199,7 @@ CMD(abc, 50, "", POS_DEAD, 106, LOG_ALWAYS, "")
         ostringstream buf;
         int cnt = 0, total = 0, unprocessed = 0;
 
-        for (Room *room = room_list; room; room = room->rnext) {
+        for (auto room: roomPrototypes) {
             for (int door = 0; door < DIR_SOMEWHERE; door++) {
                 EXIT_DATA *pexit;
 

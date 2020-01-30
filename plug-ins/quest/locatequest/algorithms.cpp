@@ -74,7 +74,7 @@ typedef RoomRoadsIterator<DoorFunc, ExtraExitFunc, PortalFunc> MyHookIterator;
 struct FindPathComplete {
     typedef NodesEntry<RoomTraverseTraits> MyNodesEntry;
     
-    FindPathComplete( Room *t, std::vector<Room *> &r ) 
+    FindPathComplete( Room *t, RoomVector &r ) 
             : target( t ), result( r )
     { 
     }
@@ -91,7 +91,7 @@ struct FindPathComplete {
     }
     
     Room *target;
-    std::vector<Room *> &result;
+    RoomVector &result;
 };
 
 /*-----------------------------------------------------------------------------
@@ -100,8 +100,8 @@ struct FindPathComplete {
 struct RoomsNearComplete {
     typedef NodesEntry<RoomTraverseTraits> MyNodesEntry;
     
-    RoomsNearComplete( Room *s, int rd, std::vector<Room *> &r ) 
-            : src( s ), radius( rd ), rooms( r )
+    RoomsNearComplete( Room *s, int rd, RoomVector &r ) 
+            : src( s ), radius( rd ), myrooms( r )
     { 
     }
 
@@ -117,14 +117,14 @@ struct RoomsNearComplete {
         
         for ( ; i != head; i++)
             if (i->node != src)
-                rooms.push_back( i->node );
+                myrooms.push_back( i->node );
 
         return true;
     }
     
     Room *src;
     int radius;
-    std::vector<Room *> &rooms;
+    RoomVector &myrooms;
 };
 
 /*-----------------------------------------------------------------------------
@@ -142,28 +142,28 @@ int LocateMiddlePointAlgo::getRadius( ) const
 }
 
 void LocateMiddlePointAlgo::findRooms( 
-        PCharacter *pch, Room *src, Room *target, LocateAlgo::Rooms &rooms ) const
+        PCharacter *pch, Room *src, Room *target, RoomVector &myrooms ) const
 {
     int i;
     DoorFunc df( pch ); ExtraExitFunc eef; PortalFunc pf;
     MyHookIterator iter( df, eef, pf, 5 );
 
-    FindPathComplete fpComplete( target, rooms );
+    FindPathComplete fpComplete( target, myrooms );
     room_traverse<MyHookIterator, FindPathComplete>( 
             src, iter, fpComplete, 10000 );
 
-    if (rooms.empty( ))
+    if (myrooms.empty( ))
         throw QuestCannotStartException( );
     
-    i = URANGE( 0, number_fuzzy( rooms.size( ) / 2 ), (int)rooms.size( ) - 1 );
-    src = rooms[i];
-    rooms.clear( );
+    i = URANGE( 0, number_fuzzy( myrooms.size( ) / 2 ), (int)myrooms.size( ) - 1 );
+    src = myrooms[i];
+    myrooms.clear( );
 
-    RoomsNearComplete rnComplete( src, getRadius( ), rooms );
+    RoomsNearComplete rnComplete( src, getRadius( ), myrooms );
     room_traverse<MyHookIterator, RoomsNearComplete>( 
             src, iter, rnComplete, 10000 );
     
-    if (rooms.empty( ))
+    if (myrooms.empty( ))
         throw QuestCannotStartException( );
 }
     
@@ -181,16 +181,16 @@ int LocateRadialAlgo::getRadius( ) const
 }
 
 void LocateRadialAlgo::findRooms( 
-        PCharacter *pch, Room *src, Room *, LocateAlgo::Rooms &rooms ) const
+        PCharacter *pch, Room *src, Room *, RoomVector &myrooms ) const
 {
     DoorFunc df( pch ); ExtraExitFunc eef; PortalFunc pf;
     MyHookIterator iter( df, eef, pf, 5 );
 
-    RoomsNearComplete rnComplete( src, getRadius( ), rooms );
+    RoomsNearComplete rnComplete( src, getRadius( ), myrooms );
     room_traverse<MyHookIterator, RoomsNearComplete>( 
             src, iter, rnComplete, 10000 );
    
-    if (rooms.empty( ))
+    if (myrooms.empty( ))
         throw QuestCannotStartException( );
 }
 
@@ -203,15 +203,15 @@ bool LocateUniformAlgo::needsEndPoint( ) const
 }
 
 void LocateUniformAlgo::findRooms( 
-        PCharacter *pch, Room *src, Room *target, LocateAlgo::Rooms &rooms ) const
+        PCharacter *pch, Room *src, Room *target, RoomVector &myrooms ) const
 {
     DoorFunc df( pch ); ExtraExitFunc eef; PortalFunc pf;
     MyHookIterator iter( df, eef, pf, 5 );
 
-    FindPathComplete fpComplete( target, rooms );
+    FindPathComplete fpComplete( target, myrooms );
     room_traverse<MyHookIterator, FindPathComplete>( 
             src, iter, fpComplete, 10000 );
 
-    if (rooms.empty( ))
+    if (myrooms.empty( ))
         throw QuestCannotStartException( );
 }

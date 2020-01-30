@@ -44,7 +44,7 @@ public:
 protected:
     NPCharacter * createMob( );
     NPCharacter * createChef( );
-    Object * createPortal( RoomList& );
+    Object * createPortal( RoomVector& );
     Object * createKey( );
 public:    
     void resetKeys( );
@@ -63,7 +63,7 @@ protected:
     bool createSecondHint( );
     void createThirdHint( );
 
-    void populateArea( area_data *, RoomList& , int );
+    void populateArea( area_data *, RoomVector& , int );
     void populateLair( );
 
     DLString lairHint( );

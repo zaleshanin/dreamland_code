@@ -63,11 +63,10 @@ void Gangsters::create( const Config& )
     }
     
     while (!areaList.empty( )) {
-        Room *room;
         int msize;
         int areaIndex;
         MobileList people;
-        RoomList mobRooms, portalRooms;
+        RoomVector mobRooms, portalRooms;
 
         areaIndex = number_range(0, areaList.size( ) - 1);
         area = areaList[ areaIndex ];
@@ -76,7 +75,7 @@ void Gangsters::create( const Config& )
         mobRoomVnums.clear( );
         portalRoomVnums.clear( );
         
-        for (room = room_list; room; room = room->rnext) {
+        for (auto room: roomPrototypes) {
             if (room->area != area) 
                 continue;
                 
@@ -650,7 +649,7 @@ void Gangsters::resetKeys( )
     }
 }
 
-Object * Gangsters::createPortal( RoomList &portalRooms ) 
+Object * Gangsters::createPortal( RoomVector &portalRooms ) 
 {
     int i; 
     Room *room;
@@ -756,7 +755,7 @@ DLString Gangsters::lairHint( )
     return "";
 }
 
-void Gangsters::populateArea( AREA_DATA *area, RoomList &mobRooms, int numPortal )
+void Gangsters::populateArea( AREA_DATA *area, RoomVector &mobRooms, int numPortal )
 {
     int number;
     

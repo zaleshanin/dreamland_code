@@ -53,11 +53,15 @@
 #ifndef _MERCDB_H_
 #define _MERCDB_H_
 
+#include <list>
+#include <map>
 #include "config_io.h"
 #include "dl_ctype.h"
 #include "dl_math.h"
 #include "dl_strings.h"
 #include "logstream.h"
+
+using namespace std;
 
 class Object;
 class NPCharacter;
@@ -80,7 +84,19 @@ extern int                newobjs;
 extern mob_index_data         * mob_index_hash          [MAX_KEY_HASH];
 extern obj_index_data         * obj_index_hash          [MAX_KEY_HASH];
 extern area_data         * area_first;
-extern Room * room_list;
+
+typedef vector<Room *> RoomVector;
+typedef list<Room *> RoomList;
+typedef map<int, Room *> RoomVnumMap;
+
+/** List of all room prototypes, kept in area files and edited in OLC. */
+extern RoomList roomPrototypes;
+
+/** Map of all room prototypes by vnum, for quick access. */
+extern RoomVnumMap roomPrototypeMap;
+
+/** List of all room instances, prototypes being the default instance for each room. */
+extern RoomList roomInstances;
 
 extern int        top_affect;
 extern int        top_area;
@@ -89,7 +105,6 @@ extern int        top_exit;
 extern int        top_mob_index;
 extern int        top_obj_index;
 extern int        top_reset;
-extern int        top_room;
 
 // MOC_SKIP_BEGIN
 struct area_file {

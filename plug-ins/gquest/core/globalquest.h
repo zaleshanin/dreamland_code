@@ -31,7 +31,6 @@ public:
     typedef ::Pointer<GlobalQuest> Pointer;
     typedef vector<NPCharacter *> MobileList;
     typedef vector<Object *> ObjectList;
-    typedef vector<Room *> RoomList;
     typedef vector<area_data *>        AreaList;
     typedef GlobalQuestInfo::Config Config;
 

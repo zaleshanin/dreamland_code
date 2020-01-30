@@ -205,9 +205,9 @@ VOID_SPELL(EvilSpirit)::run( Character *ch, Room *room, int sn, int level )
     af.modifier  = 0;
     af.bitvector = AFF_ROOM_ESPIRIT;
 
-    for (map<int, Room *>::iterator i = pArea->rooms.begin( ); i != pArea->rooms.end( ); i++)
+    for (auto i: pArea->rooms)
     {
-        room = i->second;
+        room = i.second;
         room->affectTo( &af );
         act("Частица первородного зла проникает в этот мир.", room->people,0,0,TO_ALL);
     }

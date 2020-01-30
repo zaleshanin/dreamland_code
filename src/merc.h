@@ -480,6 +480,12 @@ struct        reset_data
 };
 
 
+struct AreaInstance {
+    DLString key;
+    AREA_DATA *area;
+    RoomVnumMap rooms;
+};
+typedef map<DLString, AreaInstance> AreaInstanceMap;
 
 /*
  * Area definition.
@@ -512,7 +518,8 @@ struct        area_data
     /*OLC*/
     int                        security;
     int                        vnum;
-    map<int, Room *>    rooms;
+    RoomVnumMap   rooms;
+    AreaInstanceMap instances;
 };
 
 /*
@@ -564,14 +571,11 @@ extern                Character          *        newbie_list;
 extern                Object          *        object_list;
 
 extern                AUCTION_DATA          *        auction;
-extern                Room   *        top_affected_room;
 
 extern                KILL_DATA                kill_table        [];
 extern                TIME_INFO_DATA                time_info;
 extern                WEATHER_DATA                weather_info;
 
-extern                Room *                        room_index_hash                [];
-extern                int                        top_vnum_room;
 extern                int                        top_vnum_mob;
 extern                int                        top_vnum_obj;
 extern                int                        top_obj_index;

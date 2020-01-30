@@ -19,6 +19,7 @@ class Room;
 class Character;
 class PCharacter;
 class NPCharacter;
+class PCMemoryInterface;
 
 struct mob_index_data;
 struct obj_index_data;
@@ -30,6 +31,7 @@ Object *        create_object        ( obj_index_data *pObjIndex, short level );
 Object *        create_object_nocount ( obj_index_data *pObjIndex, short level );
 Object *        create_object_org (obj_index_data *pObjIndex,short level,bool Count);
 void                clone_object         ( Object *parent, Object *clone );
+bool create_area_instance(AREA_DATA *area, PCMemoryInterface *player);
 
 void        affect_to_obj    ( Object *, Affect *paf );
 void        affect_remove_obj( Object *, Affect *paf );
@@ -109,6 +111,7 @@ int                count_obj_in_obj( Object *container );
 int                count_obj_in_obj( Object *container, int itype );
 Object *        get_obj_wear_carry( Character *ch, const DLString &cArgument );
 bool can_see_god(Character *ch, Character *god);
+Room * get_room_instance(int vnum, DLString key);
 
 bool eyes_blinded( Character *ch );
 bool eyes_darkened( Character *ch );

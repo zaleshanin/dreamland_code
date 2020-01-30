@@ -43,7 +43,7 @@ static void csv_escape( DLString &name ) {
 static bool get_obj_resets( int vnum, AREA_DATA *&pArea, DLString &where )
 {
     // Scan resets for each room.
-    for (Room *room = room_list; room; room = room->rnext) {
+    for (auto room: roomPrototypes) {
         int mobVnum = -1;
         for(RESET_DATA *pReset = room->reset_first;pReset;pReset = pReset->next)
             switch(pReset->command) {

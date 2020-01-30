@@ -89,7 +89,7 @@
 #include "worldknowledge.h"
 #include "gsn_plugin.h"
 #include "npcharacter.h"
-#include "object.h"
+#include "core/object.h"
 #include "handler.h"
 #include "fread_utils.h"
 #include "stats_apply.h"
@@ -1771,7 +1771,7 @@ CMDWIZP( rwhere )
         return;
     }
 
-    for (Room *r = room_list; r; r = r->rnext)
+    for (auto r: roomPrototypes)
         if (is_name(argument, r->name)) {
             buf << dlprintf("[%6d] %-30s %s\r\n", r->vnum, r->name, r->area->name);
             found = true;
@@ -4086,7 +4086,7 @@ CMDWIZP( memory )
     sprintf( buf, "Objs    %5d(%d new format)\n\r", top_obj_index,newobjs );
     ch->send_to(buf);
     sprintf( buf, "Resets  %5d\n\r", top_reset     ); ch->send_to(buf);
-    sprintf( buf, "Rooms   %5d\n\r", top_room      ); ch->send_to(buf);
+    sprintf( buf, "Rooms   %5d\n\r", roomPrototypes.size() ); ch->send_to(buf);
 
     sprintf( buf, "Allocs  %5d calls   of %7d bytes.\n\r",
         memAllocCount, memAllocSize);
@@ -4167,6 +4167,7 @@ CMDWIZP( dump )
     }
 
     /* rooms */
+    int top_room = roomPrototypes.size();
     fprintf(fp,"Rooms        %4d (%8ld bytes)\n",
         top_room, top_room * (sizeof(*room)));
 

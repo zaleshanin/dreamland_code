@@ -29,7 +29,7 @@ public:
     virtual bool canStart( );
     virtual bool checkRoom( Room * );
     virtual bool checkArea( area_data * );
-    virtual void collectRooms( vector<Room *> &, int ) = 0;
+    virtual void collectRooms( RoomVector &, int ) = 0;
 
     inline const DLString& getStartMsg( );
     inline const DLString& getInfoMsg( );
@@ -112,7 +112,7 @@ XML_OBJECT
 public:
     typedef ::Pointer<InvasionDenseScenario> Pointer;
     
-    virtual void collectRooms( vector<Room *> &, int );
+    virtual void collectRooms( RoomVector &, int );
 };
 
 class InvasionSparseScenario : public InvasionScenario {
@@ -120,7 +120,7 @@ XML_OBJECT
 public:
     typedef ::Pointer<InvasionSparseScenario> Pointer;
     
-    virtual void collectRooms( vector<Room *> &, int );
+    virtual void collectRooms( RoomVector &, int );
 };
 
 /*---------------------------------------------------------------------------

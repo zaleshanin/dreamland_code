@@ -13,7 +13,6 @@ struct mob_index_data;
 struct area_data;
 
 typedef vector<area_data *> AreaList;
-typedef vector<Room *> RoomList;
 
 /*
  * RoomQuestModel
@@ -29,16 +28,16 @@ protected:
     virtual bool checkRoomVictim( PCharacter *, Room *, NPCharacter * );
     virtual bool checkRoomClient( PCharacter *, Room * );
     bool checkRoomForTraverse(PCharacter *, Room *);
-    void findClientRooms( PCharacter *, RoomList & );
-    void findClientRooms( PCharacter *, RoomList &, const VnumList & );
-    Room * getDistantRoom( PCharacter *, RoomList &, Room *, int, int );
+    void findClientRooms( PCharacter *, RoomVector & );
+    void findClientRooms( PCharacter *, RoomVector &, const VnumList & );
+    Room * getDistantRoom( PCharacter *, RoomVector &, Room *, int, int );
     Room * getRandomRoomClient( PCharacter * );
     bool mobileCanAggress(PCharacter *, NPCharacter *);
     bool targetRoomAccessible(PCharacter *, Room *);
-    static Room * getRandomRoom( RoomList & );
+    static Room * getRandomRoom( RoomVector & );
     AreaList findAreas(PCharacter *);
-    RoomList findClientRooms(PCharacter *pch, struct area_data *targetArea);
-    RoomList findVictimRooms(PCharacter *pch, struct area_data *targetArea);
+    RoomVector findClientRooms(PCharacter *pch, struct area_data *targetArea);
+    RoomVector findVictimRooms(PCharacter *pch, struct area_data *targetArea);
 };
 
 /*

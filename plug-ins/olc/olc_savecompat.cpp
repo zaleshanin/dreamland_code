@@ -549,8 +549,8 @@ void save_rooms(FILE * fp, AREA_DATA * pArea)
 {
     fprintf(fp, "#ROOMS\n");
 
-    for (map<int, Room *>::iterator i = pArea->rooms.begin( ); i != pArea->rooms.end( ); i++) {
-        save_room(fp, i->second);
+    for (auto i: pArea->rooms) {
+        save_room(fp, i.second);
     }
 
     fprintf(fp, "#0\n\n\n\n");
@@ -601,8 +601,8 @@ void save_door_resets(FILE * fp, AREA_DATA * pArea)
     EXIT_DATA *pExit;
     int door;
 
-    for (map<int, Room *>::iterator i = pArea->rooms.begin( ); i != pArea->rooms.end( ); i++) {
-        pRoomIndex = i->second;
+    for (auto i: pArea->rooms) {
+        pRoomIndex = i.second;
 
         for (door = 0; door < DIR_SOMEWHERE; door++) {
             if ((pExit = pRoomIndex->exit[door])
@@ -630,8 +630,8 @@ void save_resets(FILE * fp, AREA_DATA * pArea)
 
     save_door_resets(fp, pArea);
 
-    for (map<int, Room *>::iterator i = pArea->rooms.begin( ); i != pArea->rooms.end( ); i++) {
-        pRoom = i->second;
+    for (auto i: pArea->rooms) {
+        pRoom = i.second;
 
         for (pReset = pRoom->reset_first; pReset; pReset = pReset->next)
             switch(pReset->command) {

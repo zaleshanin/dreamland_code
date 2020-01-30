@@ -29,7 +29,6 @@ extern int top_reset;
 extern int top_area;
 extern int top_exit;
 extern int top_ed;
-extern int top_room;
 
 EXIT_DATA *exit_free;
 RESET_DATA *reset_free;
@@ -177,11 +176,8 @@ Room *new_room_index(void)
     Room *pRoom;
     int door;
 
-    top_room++;
-
     pRoom = new Room;
 
-    pRoom->next = NULL;
     pRoom->people = NULL;
     pRoom->contents = NULL;
     pRoom->extra_descr = NULL;

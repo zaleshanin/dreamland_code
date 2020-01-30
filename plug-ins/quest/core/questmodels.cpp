@@ -114,48 +114,48 @@ bool RoomQuestModel::checkRoomVictim( PCharacter *pch, Room *room, NPCharacter *
 
 Room * RoomQuestModel::getRandomRoomClient( PCharacter *pch )
 {
-    RoomList rooms;
+    RoomVector myrooms;
     
-    findClientRooms( pch, rooms );
-    return getRandomRoom( rooms );
+    findClientRooms( pch, myrooms );
+    return getRandomRoom( myrooms );
 }
 
-Room * RoomQuestModel::getRandomRoom( RoomList &rooms )
+Room * RoomQuestModel::getRandomRoom( RoomVector &myrooms )
 {
-    if (rooms.empty( ))
+    if (myrooms.empty( ))
         return NULL;
     else
-        return rooms[number_range( 0, rooms.size( ) - 1 )];
+        return myrooms[number_range( 0, myrooms.size( ) - 1 )];
 }
 
-void RoomQuestModel::findClientRooms( PCharacter *pch, RoomList &rooms )
+void RoomQuestModel::findClientRooms( PCharacter *pch, RoomVector &myrooms )
 {
-    for (Room * r = room_list; r; r = r->rnext)
+    for (auto r: myrooms)
         if (checkRoomClient( pch, r ))
-            rooms.push_back( r );
+            myrooms.push_back( r );
 
-    if (rooms.empty( ))
+    if (myrooms.empty( ))
         throw QuestCannotStartException( );
 }
 
-void RoomQuestModel::findClientRooms( PCharacter *pch, RoomList &rooms, const VnumList &vnums )
+void RoomQuestModel::findClientRooms( PCharacter *pch, RoomVector &myrooms, const VnumList &vnums )
 {
     Room *r;
     
     for (VnumList::const_iterator v = vnums.begin( ); v != vnums.end( ); v++)
         if (( r = get_room_index( *v ) ))
             if (checkRoomClient( pch, r ))
-                rooms.push_back( r );
+                myrooms.push_back( r );
 
-    if (rooms.empty( ))
+    if (myrooms.empty( ))
         throw QuestCannotStartException( );
 }
 
-RoomList RoomQuestModel::findClientRooms(PCharacter *pch, struct area_data *targetArea)
+RoomVector RoomQuestModel::findClientRooms(PCharacter *pch, struct area_data *targetArea)
 {
-    RoomList result;
+    RoomVector result;
 
-    for (Room * r = room_list; r; r = r->rnext) {
+    for (auto r: roomPrototypes) {
         if (r->area != targetArea)
             continue;
         if (!checkRoomClient( pch, r ))
@@ -167,11 +167,11 @@ RoomList RoomQuestModel::findClientRooms(PCharacter *pch, struct area_data *targ
     return result;
 }
 
-RoomList RoomQuestModel::findVictimRooms(PCharacter *pch, struct area_data *targetArea)
+RoomVector RoomQuestModel::findVictimRooms(PCharacter *pch, struct area_data *targetArea)
 {
-    RoomList result;
+    RoomVector result;
 
-    for (Room * r = room_list; r; r = r->rnext) {
+    for (auto r: roomPrototypes) {
         if (r->area != targetArea)
             continue;
         if (!checkRoomVictim( pch, r, NULL ))
@@ -200,17 +200,17 @@ AreaList RoomQuestModel::findAreas(PCharacter *pch)
 }
 
 
-Room * RoomQuestModel::getDistantRoom( PCharacter *pch, RoomList &rooms, Room *from, int range, int attempts )
+Room * RoomQuestModel::getDistantRoom( PCharacter *pch, RoomVector &myrooms, Room *from, int range, int attempts )
 {
     int tries = 0;
     
-    while (!rooms.empty( ) && tries++ < attempts) {
-        int i = number_range( 0, rooms.size( ) - 1 );
+    while (!myrooms.empty( ) && tries++ < attempts) {
+        int i = number_range( 0, myrooms.size( ) - 1 );
 
-        if (room_distance( pch, rooms[i], from, 10000 ) > range)
-            return rooms[i];
+        if (room_distance( pch, myrooms[i], from, 10000 ) > range)
+            return myrooms[i];
 
-        rooms.erase( rooms.begin( ) + i );
+        myrooms.erase( myrooms.begin( ) + i );
     }
     
     throw QuestCannotStartException( );
@@ -287,7 +287,7 @@ typedef RoomRoadsIterator<DoorFunc, ExtraExitFunc, PortalFunc> MyHookIterator;
 struct FindPathComplete {
     typedef NodesEntry<RoomTraverseTraits> MyNodesEntry;
     
-    FindPathComplete( Room *t, std::vector<Room *> &r ) 
+    FindPathComplete( Room *t, RoomVector &r ) 
             : target( t ), result( r )
     { 
     }
@@ -304,7 +304,7 @@ struct FindPathComplete {
     }
     
     Room *target;
-    std::vector<Room *> &result;
+    RoomVector &result;
 };
 
 /**
@@ -316,17 +316,17 @@ bool RoomQuestModel::targetRoomAccessible(PCharacter *pch, Room *target)
     if (pch->getRemorts().size() > 0 || !rated_as_newbie(pch))
         return true;
 
-    std::vector<Room *> rooms;
+    RoomVector myrooms;
     MyHookIterator hookIterator(
         DoorFunc(pch, this), 
         ExtraExitFunc(pch, this), 
         PortalFunc(pch, this), 
         5);
-    FindPathComplete fpComplete( target, rooms );
+    FindPathComplete fpComplete( target, myrooms );
     room_traverse<MyHookIterator, FindPathComplete>( 
             pch->in_room, hookIterator, fpComplete, 10000 );
     
-    return !rooms.empty();
+    return !myrooms.empty();
 }
 
 /*--------------------------------------------------------------------

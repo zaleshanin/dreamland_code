@@ -18,7 +18,6 @@
 
 using namespace std;
 
-bool dup_room_vnum( int vnum );
 bool dup_obj_vnum( int vnum );
 bool dup_mob_vnum( int vnum );
 
@@ -226,9 +225,9 @@ XMLArea::load_rooms(AREA_DATA *a)
 {
     XMLMapBase<XMLRoom>::iterator rit;
     for(rit = rooms.begin( ); rit != rooms.end( ); rit++) {
-        int iHash, vnum = rit->first.toInt( );
+        int vnum = rit->first.toInt( );
         
-        if (dup_room_vnum( vnum ))
+        if (roomPrototypeMap.find(vnum) != roomPrototypeMap.end())
             throw FileFormatException("Load_rooms: vnum %d duplicated", vnum);
 
         Room *room = rit->second.compat(vnum);
@@ -237,16 +236,10 @@ XMLArea::load_rooms(AREA_DATA *a)
         if(3000 <= vnum && vnum < 3400)
             SET_BIT(room->room_flags, ROOM_LAW);
 
-        iHash = vnum % MAX_KEY_HASH;
-        room->next = room_index_hash[iHash];
-        room_index_hash[iHash] = room;
-        top_room++;
-        top_vnum_room = top_vnum_room < vnum ? vnum : top_vnum_room;    /* OLC */
-
-        room->rnext = room_list;
-        room_list = room;
-
         room->area->rooms[vnum] = room;
+        roomPrototypeMap[vnum] = room;
+        roomPrototypes.push_back(room);
+        roomInstances.push_back(room);
 
         if (FeniaManager::wrapperManager)
             FeniaManager::wrapperManager->linkWrapper(room);

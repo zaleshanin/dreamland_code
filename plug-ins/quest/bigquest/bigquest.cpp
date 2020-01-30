@@ -35,8 +35,8 @@ void BigQuest::create( PCharacter *pch, NPCharacter *questman )
 
     struct area_data *targetArea = areas[number_range(0, areas.size() - 1)];
 
-    RoomList rooms = findVictimRooms(pch, targetArea);
-    if (rooms.size() < 5)
+    RoomVector myrooms = findVictimRooms(pch, targetArea);
+    if (myrooms.size() < 5)
         throw QuestCannotStartException();
 
     mobsTotal = number_range(10, 15);
@@ -47,7 +47,7 @@ void BigQuest::create( PCharacter *pch, NPCharacter *questman )
     
     try {
         for (int m = 0, o = 0; m < mobsTotal; m++, o++) {
-            Room *targetRoom = getRandomRoom(rooms);
+            Room *targetRoom = getRandomRoom(myrooms);
             
             NPCharacter *mob= createMobile<BandaMobile>(28012);
             scenario.getRandomMobile().dress(mob);

@@ -101,17 +101,16 @@ TIME_INFO_DATA                time_info;
 WEATHER_DATA                weather_info;
 
 AUCTION_DATA        *        auction = new auction_data( );
-Room        *        top_affected_room = 0;
 
-
-Room* room_list = 0;
+RoomList roomPrototypes;
+RoomVnumMap roomPrototypeMap;
+RoomList roomInstances;
 
 /*
  * Locals.
  */
 MOB_INDEX_DATA *        mob_index_hash                [MAX_KEY_HASH];
 OBJ_INDEX_DATA *        obj_index_hash                [MAX_KEY_HASH];
-Room *        room_index_hash                [MAX_KEY_HASH];
 char *                        string_hash                [MAX_KEY_HASH];
 
 AREA_DATA *                area_first;
@@ -126,9 +125,7 @@ int                        top_exit;
 int                        top_mob_index;
 int                        top_obj_index;
 int                        top_reset;
-int                        top_room;
 
-int                        top_vnum_room;
 int                        top_vnum_mob;
 int                        top_vnum_obj;
 
@@ -271,15 +268,9 @@ OBJ_INDEX_DATA *get_obj_index( int vnum )
  */
 Room *get_room_index( int vnum )
 {
-    Room *pRoomIndex;
-
-    for ( pRoomIndex  = room_index_hash[vnum % MAX_KEY_HASH];
-          pRoomIndex != 0;
-          pRoomIndex  = pRoomIndex->next )
-    {
-        if ( pRoomIndex->vnum == vnum )
-            return pRoomIndex;
-    }
+    RoomVnumMap::const_iterator r = roomPrototypeMap.find(vnum);
+    if (r != roomPrototypeMap.end())
+        return r->second;
 
     if (DLScheduler::getThis( )->getCurrentTick( ) == 0 && !dreamland->hasOption( DL_BUILDPLOT )) 
         throw FileFormatException( "get_room_index: vnum %d not found on world startup", vnum );

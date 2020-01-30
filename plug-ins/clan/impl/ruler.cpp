@@ -1649,9 +1649,9 @@ VOID_SPELL(KnowPersone)::run( Character *ch, Character *victim, int sn, int leve
         
         if (IS_SET(mob->pIndexData->area->area_flag, AREA_HOMETOWN)) {
             ostringstream buf;
-            list<Room *> repops;
+            RoomList repops;
 
-            for (Room *room = room_list; room; room = room->rnext)
+            for (auto room: roomPrototypes)
                 for (RESET_DATA *pReset = room->reset_first; pReset; pReset = pReset->next)
                     if (pReset->command == 'M' && pReset->arg1 == mob->pIndexData->vnum) 
                         repops.push_back( room );
@@ -1664,8 +1664,8 @@ VOID_SPELL(KnowPersone)::run( Character *ch, Character *victim, int sn, int leve
             else if (repops.size( ) > 0) {
                 act( "$C1 может обитать в одном из следующих мест:", ch, 0, mob, TO_CHAR );
 
-                for (list<Room *>::iterator r = repops.begin( ); r != repops.end( ); r++)
-                    ch->printf( "    %s  (%s)\r\n", (*r)->name, (*r)->area->name );
+                for (auto r: repops)
+                    ch->printf( "    %s  (%s)\r\n", r->name, r->area->name );
             }
         }
     }

@@ -16,7 +16,7 @@ void RoomBehaviorManager::setAll( )
 {
     LogStream::sendNotice( ) << "Assigning room behaviors..." << endl;
 
-    for (Room *r = room_list; r; r = r->rnext)
+    for (auto r: roomInstances)
         if (r->behavior)
             r->behavior->setRoom( r );
 }
@@ -63,3 +63,16 @@ void RoomBehaviorManager::save( const Room *pRoom, FILE *fp )
     }
 }
 
+void RoomBehaviorManager::copy(const Room *proto, Room *instance)
+{
+    if (proto->behavior) {
+        ostringstream ostr;
+        proto->behavior.toStream(ostr);
+
+        istringstream istr(ostr.str());
+        instance->behavior.fromStream(istr);
+
+        if (instance->behavior)
+            instance->behavior->setRoom(instance);
+    }
+}

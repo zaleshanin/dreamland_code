@@ -450,11 +450,10 @@ void char_update( )
 
 void diving_update( )
 {
-    for(int i=0;i<MAX_KEY_HASH;i++)
-        for(Room *r = room_index_hash[i]; r; r = r->next) {
-            FENIA_VOID_CALL(r, "DiveUpdate", "");
-            FENIA_VOID_CALL(r, "Spec", "");
-        }
+    for (auto r: roomInstances) {
+        FENIA_VOID_CALL(r, "DiveUpdate", "");
+        FENIA_VOID_CALL(r, "Spec", "");
+    }
 }
 
 static bool oprog_spec( Object *obj )
@@ -1170,15 +1169,10 @@ void light_update( PCharacter *ch )
 
 void room_update( void )
 {
-    Room *room;
-    Room *room_next;
-
-    for ( room = top_affected_room; room ; room = room_next )
+    for (auto room: roomInstances)
     {
         Affect *paf;
         Affect *paf_next;
-
-        room_next = room->aff_next;
 
         for ( paf = room->affected; paf != 0; paf = paf_next )
         {
@@ -1202,23 +1196,13 @@ void room_update( void )
                 room->affectRemove( paf );
             }
         }
-
     }
 }
 
 void room_affect_update( )
 {
-    Room *room;
-    Room *room_next;
-    Affect *paf;
-
-    for (room = top_affected_room; room; room = room_next) {
-        room_next = room->aff_next;
-        
-        if (!room->people)
-            continue;
-        
-        for (paf = room->affected; paf; paf = paf->next) {
+    for (auto room: roomInstances) {
+        for (Affect *paf = room->affected; paf; paf = paf->next) {
             if (!paf->type->getAffect( )) 
                 continue;
 
