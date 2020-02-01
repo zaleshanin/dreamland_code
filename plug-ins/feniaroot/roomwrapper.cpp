@@ -137,7 +137,7 @@ NMI_GET(RoomWrapper, rnext, "следующая комната в списке r
 {
     checkTarget();
 
-    RoomList::const_iterator myself = std::find(roomPrototypes.begin(), roomPrototypes.end(), target);
+    RoomVector::const_iterator myself = std::find(roomPrototypes.begin(), roomPrototypes.end(), target);
     if (myself == roomPrototypes.end())
         return Register();
 

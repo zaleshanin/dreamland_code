@@ -71,10 +71,10 @@ void Room::affectModify( Affect *paf, bool fAdd )
  */
 void Room::affectTo( Affect *paf )
 {
-    Affect *paf_new;
+    if (!affected)
+        roomAffected.insert(this);
 
-    paf_new = dallocate( Affect );
-
+    Affect *paf_new = dallocate( Affect );
     *paf_new                = *paf;
     paf_new->next        = affected;
     affected        = paf_new;
@@ -146,6 +146,9 @@ void Room::affectRemove( Affect *paf )
     ddeallocate( paf );
 
     affectCheck( where, vector );
+
+    if (!affected)
+        roomAffected.erase(this);
 }
 
 /*

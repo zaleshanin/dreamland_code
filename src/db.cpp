@@ -102,9 +102,10 @@ WEATHER_DATA                weather_info;
 
 AUCTION_DATA        *        auction = new auction_data( );
 
-RoomList roomPrototypes;
+RoomVector roomPrototypes;
 RoomVnumMap roomPrototypeMap;
-RoomList roomInstances;
+RoomVector roomInstances;
+RoomSet roomAffected;
 
 /*
  * Locals.

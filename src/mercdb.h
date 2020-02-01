@@ -55,6 +55,7 @@
 
 #include <list>
 #include <map>
+#include <set>
 #include "config_io.h"
 #include "dl_ctype.h"
 #include "dl_math.h"
@@ -87,16 +88,20 @@ extern area_data         * area_first;
 
 typedef vector<Room *> RoomVector;
 typedef list<Room *> RoomList;
+typedef set<Room *> RoomSet;
 typedef map<int, Room *> RoomVnumMap;
 
 /** List of all room prototypes, kept in area files and edited in OLC. */
-extern RoomList roomPrototypes;
+extern RoomVector roomPrototypes;
 
 /** Map of all room prototypes by vnum, for quick access. */
 extern RoomVnumMap roomPrototypeMap;
 
 /** List of all room instances, prototypes being the default instance for each room. */
-extern RoomList roomInstances;
+extern RoomVector roomInstances;
+
+/** A small collection of rooms with affects on them, to avoid going through the whole list in updates. */
+extern RoomSet roomAffected;
 
 extern int        top_affect;
 extern int        top_area;

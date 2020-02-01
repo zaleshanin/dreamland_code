@@ -1172,7 +1172,12 @@ void light_update( PCharacter *ch )
 
 void room_update( void )
 {
-    for (auto room: roomInstances)
+    RoomSet tempAffected;
+
+    // Create temporary set to avoid removing set elements from inside the loop.
+    tempAffected.insert(roomAffected.begin(), roomAffected.end());
+
+    for (auto room: tempAffected)
     {
         Affect *paf;
         Affect *paf_next;
@@ -1204,7 +1209,7 @@ void room_update( void )
 
 void room_affect_update( )
 {
-    for (auto room: roomInstances) {
+    for (auto room: roomAffected) {
         for (Affect *paf = room->affected; paf; paf = paf->next) {
             if (!paf->type->getAffect( )) 
                 continue;
