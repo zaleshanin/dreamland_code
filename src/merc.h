@@ -485,7 +485,11 @@ struct AreaInstance {
     DLString key;
     AREA_DATA *area;
     RoomVnumMap rooms;
+    int age;
+    int nplayer;
+    bool empty;
 };
+
 typedef map<DLString, AreaInstance> AreaInstanceMap;
 
 /*
@@ -502,13 +506,10 @@ struct        area_data
     char *                credits;
     char *              translator;
     char *              speedwalk;
-    int                age;
-    int                nplayer;
     int                low_range;
     int                high_range;
     int                 min_vnum;
     int                max_vnum;
-    bool                empty;
     unsigned long        count;
     char *                resetmsg;
     int                area_flag;
@@ -519,8 +520,12 @@ struct        area_data
     /*OLC*/
     int                        security;
     int                        vnum;
-    RoomVnumMap   rooms;
     AreaInstanceMap instances;
+
+    void addRoomInstance(Room *room, const DLString &key);
+    void addRoomProto(Room *room);
+    AreaInstance & getDefaultInstance();
+    static const DLString DEFAULT_INSTANCE_NAME;
 };
 
 /*

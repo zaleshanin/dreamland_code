@@ -167,8 +167,31 @@ new_area_file(const char *name)
     return rc;
 }
 
+static const DLString area_data::DEFAULT_INSTANCE_NAME = "default";
+
 area_data::area_data( ) : behavior( AreaBehavior::NODE_NAME )
 {
+}
+
+void area_data::addRoomInstance(Room *room, const DLString &key)
+{
+
+}
+
+void area_data::addRoomProto(Room *pRoom)
+{
+    pRoom->area = this;
+
+    pRoom->area->rooms[value] = pRoom;
+    roomPrototypeMap[value] = pRoom;
+    roomPrototypes.push_back(pRoom);
+    roomInstances.push_back(pRoom);
+
+}
+
+AreaInstance & area_data::getDefaultInstance()
+{
+    return instances[DEFAULT_INSTANCE_NAME];
 }
 
 mob_index_data::mob_index_data( ) 

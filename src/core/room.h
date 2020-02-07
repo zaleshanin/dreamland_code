@@ -49,6 +49,7 @@ struct RoomHistory : public list<RoomHistoryEntry> {
 };
 
 class Room : public virtual DLObject, public WrapperTarget {
+friend struct area_data;    
 public:
     Room( );
 
@@ -83,7 +84,7 @@ public:
     Character *        people;
     Object *        contents;
     extra_descr_data *        extra_descr;
-    area_data *        area;
+
     exit_data *        exit        [6];
     exit_data *        old_exit[6];
     extra_exit_data * extra_exit;
@@ -112,6 +113,10 @@ public:
 
     XMLPersistentStreamable<RoomBehavior> behavior;
     Scripting::Register init;
+
+protected:
+    /** Area this room prototype belongs to. */
+    area_data *        area;
 };
 
 
