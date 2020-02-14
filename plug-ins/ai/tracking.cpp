@@ -229,10 +229,10 @@ void BasicMobileBehavior::shooted( Character *attacker, int door )
         return move_char(ch, d, false, "normal");
     }
     
-    if (ch->in_room->area != ch->zone) 
+    if (ch->in_room->areaInstance != ch->zone) 
         return chance( 10 ) && backHome( false );
 
-    if (ch->in_room->area == victim->in_room->area) 
+    if (ch->in_room->areaInstance == victim->in_room->areaInstance) 
         return chance( 10 ) && trackTraverseSameZone( victim->in_room );
 
     return trackCaster( victim );

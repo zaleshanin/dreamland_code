@@ -244,7 +244,7 @@ bool BasicMobileBehavior::isHomesick( )
     if (ch->position <= POS_SLEEPING)
         return false;
         
-    if (ch->zone == 0 || ch->in_room->area == ch->zone)
+    if (ch->zone == 0 || ch->in_room->areaInstance == ch->zone)
         return false;
 
     if (ch->switchedFrom)
@@ -296,7 +296,7 @@ bool BasicMobileBehavior::checkLastFoughtHiding()
     if (!(pch = getLastFoughtWorld()))
         return false;
     
-    if (!pch->in_room || pch->in_room->area != ch->in_room->area)
+    if (!pch->in_room || pch->in_room->areaInstance != ch->in_room->areaInstance)
         return false;
 
     if (!IS_SET(pch->in_room->room_flags, ROOM_LAW) || !IS_SET(pch->in_room->room_flags, ROOM_SAFE))

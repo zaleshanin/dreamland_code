@@ -26,7 +26,7 @@ bool MidgaardFountain::area( ) {
     for (o = object_list; o; o = o->next)
         if (o->pIndexData->vnum == OBJ_VNUM_MONUMENT 
             && o->in_room
-            && o->in_room->area == obj->in_room->area)
+            && o->in_room->areaInstance == obj->in_room->areaInstance)
         {
             count++;
         }

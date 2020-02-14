@@ -409,7 +409,7 @@ void GangMember::yell( Character *mob, const DLString &msg )
     name.upperFirstCharacter( );
         
     buf << name << " пронзительно кричит '{Y" << msg << "{x'" << endl;
-    GQChannel::zecho( Gangsters::getThis( ), mob->in_room->area, buf.str( ) );
+    GQChannel::zecho( Gangsters::getThis( ), mob->in_room->areaInstance, buf.str( ) );
 }
 
 bool GangMember::eatKey( ) 

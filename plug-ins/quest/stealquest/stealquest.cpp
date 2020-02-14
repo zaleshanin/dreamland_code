@@ -88,12 +88,12 @@ void StealQuest::create( PCharacter *pch, NPCharacter *questman )
     name.upperFirstCharacter( );
     victimName = name;
     victimRoom = victim->in_room->name;
-    victimArea = victim->in_room->area->name;
+    victimArea = victim->in_room->areaInstance->area->name;
     
     name = thief->getShortDescr( );
     name.upperFirstCharacter( );
     thiefName = name;
-    thiefArea = thief->in_room->area->name;
+    thiefArea = thief->in_room->areaInstance->area->name;
     thiefRoom = thief->in_room->name;
     thiefSex = thief->getSex( );
 
@@ -130,7 +130,7 @@ void StealQuest::create( PCharacter *pch, NPCharacter *questman )
     }
 
     tell_raw( pch, questman, "Пострадавшего ищи в районе {W%s{G ({W{hh%s{hx{G).", 
-                  victim->in_room->name, victim->in_room->area->name );
+                  victim->in_room->name, victim->in_room->areaInstance->area->name );
     tell_fmt("У тебя есть {Y%3$d{G мину%3$Iта|ты|т, чтобы добраться туда и узнать подробности.", 
               pch, questman, time );
     
@@ -319,7 +319,7 @@ bool StealQuest::checkMobileVictim( PCharacter *pch, NPCharacter *mob )
     if (!VictimQuestModel::checkMobileVictim( pch, mob )) 
         return false;
 
-    if (mob->in_room->area == item->carried_by->in_room->area)
+    if (mob->in_room->areaInstance->area == item->carried_by->in_room->areaInstance->area)
         return false;;
 
     level_diff = mob->getRealLevel( ) - pch->getModifyLevel( );
@@ -430,7 +430,7 @@ Room * StealQuest::findHideaway( PCharacter *pch, NPCharacter *thief )
     RoomVector::iterator r;
 
     for (auto room: roomPrototypes) {
-        if (room->area != thief->in_room->area)
+        if (room->areaInstance->area != thief->in_room->areaInstance->area)
             continue;
         
         if (!checkRoom( pch, room ))

@@ -241,7 +241,7 @@ VOID_SPELL(Earthquake)::run( Character *ch, Room *room, int sn, int level )
     {
         vch_next        = vch->next_in_room;
 
-        if (DIGGED(vch) && vch->was_in_room->area == room->area)
+        if (DIGGED(vch) && vch->was_in_room->areaInstance == room->areaInstance)
             if (!is_safe_nomessage( ch, vch ) && number_percent( ) < ch->getSkill( sn ) / 2)
                 undig_earthquake( vch );
         

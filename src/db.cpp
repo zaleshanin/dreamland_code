@@ -50,8 +50,7 @@
 *        ROM license, in the file Rom24/doc/rom.license                           *
 ***************************************************************************/
 
-#include <list>
-using namespace std;
+#include <algorithm>
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -167,7 +166,44 @@ new_area_file(const char *name)
     return rc;
 }
 
-static const DLString area_data::DEFAULT_INSTANCE_NAME = "default";
+/** AreaInstance constructor, setting age to high number to trigger area update. */
+AreaInstance::AreaInstance()
+            : area(0), age(100), nplayer(0), empty(true)
+{
+
+}
+
+void AreaInstance::addRoom(Room *room)
+{
+    room->areaInstance = this;
+    rooms[room->vnum] = room;    
+    roomInstances.push_back(room);
+
+    if (isPrimary()) {
+        // For prototype rooms (i.e. those on a primary area instance), remember their details for quick access.
+        roomPrototypeMap[room->vnum] = room;
+        roomPrototypes.push_back(room);
+    } else {
+        // For instance rooms, remember a link to their prototype.
+        room->pIndexData = get_room_index(room->vnum);
+        if (!room->pIndexData)
+            bug("AreaInstance::addRoom no proto found for %d %s in %s", room->vnum, key.c_str(), area->area_file->file_name);
+    }   
+}
+
+Room * AreaInstance::getRoom(int vnum)
+{
+    auto it = rooms.find(vnum);
+    if (it == rooms.end())
+        return NULL;
+    else
+        return it->second;
+}
+
+bool AreaInstance::isPrimary() const
+{
+    return area->instances.front() == this;
+}
 
 area_data::area_data( ) : behavior( AreaBehavior::NODE_NAME )
 {
@@ -175,23 +211,75 @@ area_data::area_data( ) : behavior( AreaBehavior::NODE_NAME )
 
 void area_data::addRoomInstance(Room *room, const DLString &key)
 {
-
+    getOrCreateInstance(key)->addRoom(room);
 }
 
 void area_data::addRoomProto(Room *pRoom)
 {
-    pRoom->area = this;
-
-    pRoom->area->rooms[value] = pRoom;
-    roomPrototypeMap[value] = pRoom;
-    roomPrototypes.push_back(pRoom);
-    roomInstances.push_back(pRoom);
-
+    getDefaultInstance()->addRoom(pRoom);
 }
 
-AreaInstance & area_data::getDefaultInstance()
+void AreaInstance::eventCharPlaced(Character *ch)
 {
-    return instances[DEFAULT_INSTANCE_NAME];
+    if (ch->is_npc()) {
+        mobs[ch->getNPC()->pIndexData->vnum]++;
+    } else {
+        nplayer++;
+        if (empty) {
+            empty = false;
+            age = 0;
+        }
+    }
+}
+
+void AreaInstance::eventCharRemoved(Character *ch)
+{
+    if (ch->is_npc()) {
+        int vnum = ch->getNPC()->pIndexData->vnum;
+        if (mobs[vnum] > 0)
+            mobs[vnum]--;
+    } else
+        nplayer--;
+}
+
+const DLString DEFAULT_INSTANCE = "";
+
+AreaInstance * area_data::getDefaultInstance()
+{
+    if (instances.empty())
+        return createInstance(DEFAULT_INSTANCE);
+
+    return instances.front();
+}
+
+AreaInstance * area_data::getInstance(const DLString &key)
+{
+    auto it = instanceMap.find(key);
+    if (it != instanceMap.end())
+        return it->second;
+    else
+        return NULL;
+}
+
+AreaInstance * area_data::createInstance(const DLString &key)
+{
+    AreaInstance *ai = new AreaInstance;
+    ai->area = this;
+    ai->key = key;
+
+    instanceMap[key] = ai;
+    instances.push_back(ai);
+    notice("Created instance (%s) for area %s.", key.c_str(), name);
+    return ai;
+}
+
+AreaInstance * area_data::getOrCreateInstance(const DLString &key)
+{
+    AreaInstance *existing = getInstance(key);
+    if (existing)
+        return existing;
+
+    return createInstance(key);
 }
 
 mob_index_data::mob_index_data( ) 
@@ -288,7 +376,6 @@ OBJ_INDEX_DATA *get_obj_index( int vnum )
 
 /*
  * Translates room virtual number to its room index struct.
- * Hash table lookup.
  */
 Room *get_room_index( int vnum )
 {

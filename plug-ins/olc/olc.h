@@ -29,6 +29,8 @@ void string_show(Character * ch, char *strch);
 
 #define MAX_MOB 1                /* Default maximum number for resetting mobs */
 
+bool area_instance_error(Character *ch);
+
 AREA_DATA *get_area_data(int vnum);
 class AreaHelp;
 AreaHelp * get_area_help(AREA_DATA *area);

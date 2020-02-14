@@ -91,7 +91,7 @@ OLCStateRoom::statePrompt( Descriptor *d )
 void
 OLCStateRoom::changed( PCharacter *ch )
 {
-    SET_BIT(ch->in_room->area->area_flag, AREA_CHANGED);
+    SET_BIT(ch->in_room->areaInstance->area->area_flag, AREA_CHANGED);
 }
 
 /*-------------------------------------------------------------------------
@@ -128,15 +128,15 @@ REDIT(rlist, "ксписок", "список всех комнат в данно
 
     one_argument(argument, arg);
 
-    pArea = ch->in_room->area;
+    pArea = ch->in_room->areaInstance->area;
 
-    if (pArea->rooms.empty( )) {
+    if (pArea->getDefaultInstance()->rooms.empty( )) {
         stc("Комната(комнаты) в этой арии не обнаружены.\n\r", ch);
         return false;
     }
 
-    for (map<int, Room *>::iterator i = pArea->rooms.begin( ); i != pArea->rooms.end( ); i++) {
-        pRoomIndex = i->second;
+    for (auto i: pArea->getDefaultInstance()->rooms) {
+        pRoomIndex = i.second;
 
         buf << fmt( 0, "[%7d] %-17.17s",
                        pRoomIndex->vnum,
@@ -169,7 +169,7 @@ REDIT(mlist, "мсписок", "список всех мобов в данной
     }
 
     one_argument(argument, arg);
-    pArea = ch->in_room->area;
+    pArea = ch->in_room->areaInstance->area;
     fAll = !str_cmp(arg, "all");
     found = false;
 
@@ -213,7 +213,7 @@ REDIT(olist, "псписок", "список всех предметов в да
     }
 
     one_argument(argument, arg);
-    pArea = ch->in_room->area;
+    pArea = ch->in_room->areaInstance->area;
     fAll = !str_cmp(arg, "all");
     found = false;
 
@@ -257,7 +257,7 @@ OLCStateRoom::show(PCharacter *ch, Room *pRoom, bool showWeb)
 
     ptc(ch, "Name:       [{W%s{x] %s\n\rArea:       [{W%5d{x] %s\n\r",
               pRoom->name, web_edit_button(showWeb, ch, "name", "web").c_str(),
-              pRoom->area->vnum, pRoom->area->name);
+              pRoom->areaInstance->area->vnum, pRoom->areaInstance->area->name);
     ptc(ch, "Vnum:       [{W%u{x]\n\r", pRoom->vnum);
     ptc(ch, "Clan:       [{W%s{x] ", pRoom->clan->getName( ).c_str( ));
     ptc(ch, "Guilds: [{W%s{x]\n\r", pRoom->guilds.toString().c_str());
@@ -471,8 +471,8 @@ OLCStateRoom::change_exit(PCharacter * ch, char *argument, int door)
             free_exit(pToRoom->exit[rev]);
             pToRoom->exit[rev] = NULL;
             
-            if(pRoom->area != pToRoom->area)
-                SET_BIT(pToRoom->area->area_flag, AREA_CHANGED);
+            if(pRoom->areaInstance->area != pToRoom->areaInstance->area)
+                SET_BIT(pToRoom->areaInstance->area->area_flag, AREA_CHANGED);
             stc("Exit unlinked from remote side.\n\r", ch);
         }
 
@@ -536,8 +536,8 @@ OLCStateRoom::change_exit(PCharacter * ch, char *argument, int door)
         pExit->orig_door = door;
         pToRoom->exit[door] = pExit;
 
-        if(pRoom->area != pToRoom->area)
-            SET_BIT(pToRoom->area->area_flag, AREA_CHANGED);
+        if(pRoom->areaInstance->area != pToRoom->areaInstance->area)
+            SET_BIT(pToRoom->areaInstance->area->area_flag, AREA_CHANGED);
 
         stc("Two-way link established.\n\r", ch);
         return true;
@@ -718,12 +718,7 @@ OLCStateRoom::redit_create(PCharacter *ch, char *argument)
 
     pRoom = new_room_index();
     pRoom->vnum = value;
-    pRoom->area = get_vnum_area(value);
-
-    pRoom->area->rooms[value] = pRoom;
-    roomPrototypeMap[value] = pRoom;
-    roomPrototypes.push_back(pRoom);
-    roomInstances.push_back(pRoom);
+    get_vnum_area(value)->addRoomProto(pRoom);
 
     stc("Room created.\n\r", ch);
     return pRoom;
@@ -1230,7 +1225,7 @@ CMD(redit, 50, "", POS_DEAD, 103, LOG_ALWAYS,
         if(!pRoom)
             return;
 
-        SET_BIT(pRoom->area->area_flag, AREA_CHANGED);
+        SET_BIT(pRoom->areaInstance->area->area_flag, AREA_CHANGED);
         
     } else if(is_number(arg1)) {
         pRoom = get_room_index(atoi(arg1));
@@ -1240,6 +1235,9 @@ CMD(redit, 50, "", POS_DEAD, 103, LOG_ALWAYS,
             return;
         }
     } else if(!*arg1) {
+        if (area_instance_error(ch))
+            return;
+
         /*nothing*/
     } else {
         stc("Usage: redit show [vnum]\r\n", ch);

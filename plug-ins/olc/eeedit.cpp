@@ -87,7 +87,7 @@ OLCStateExtraExit::commit( )
     if(!pRoom)
         return;
 
-    SET_BIT(pRoom->area->area_flag, AREA_CHANGED);
+    SET_BIT(pRoom->areaInstance->area->area_flag, AREA_CHANGED);
 
     EXTRA_EXIT_DATA *eexit;
     const char *k = keyword.getValue( ).c_str( );

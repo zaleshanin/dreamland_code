@@ -85,7 +85,7 @@ void RainbowGQuest::create( const Config& config )
         
         mob = ch->getNPC( );
         
-        if (scenario->checkArea( mob->in_room->area )
+        if (scenario->checkArea( mob->in_room->areaInstance->area )
             && scenario->checkRoom( mob->in_room )
             && scenario->checkMobile( mob ))
         {
@@ -105,7 +105,7 @@ void RainbowGQuest::create( const Config& config )
             mobiles.erase( mobiles.begin( ) + i );
             
             for (j = bringers.begin( ); j != bringers.end( ); j++)
-                if ((*j)->in_room->area == mob->in_room->area)
+                if ((*j)->in_room->areaInstance == mob->in_room->areaInstance)
                     break;
             
             if (j != bringers.end( )) 
@@ -120,7 +120,7 @@ void RainbowGQuest::create( const Config& config )
             bringers.push_back( mob );
 
             roomVnums.push_back( mob->in_room->vnum );
-            SET_BIT(mob->in_room->area->area_flag, AREA_NOGATE);
+            SET_BIT(mob->in_room->areaInstance->area->area_flag, AREA_NOGATE);
         }
 
         if (bringers.size( ) < total) 
@@ -153,7 +153,7 @@ void RainbowGQuest::cleanup( )
     LogStream::sendNotice( ) << "Rainbow cleanup." << endl;
 
     for (i = 0; i < roomVnums.size( ); i++)
-        REMOVE_BIT(get_room_index(roomVnums[i])->area->area_flag, AREA_NOGATE);
+        REMOVE_BIT(get_room_index(roomVnums[i])->areaInstance->area->area_flag, AREA_NOGATE);
         
     for (ch = char_list; ch; ch = ch_next) {
         ch_next = ch->next;
@@ -283,7 +283,7 @@ void RainbowGQuest::getQuestDescription( std::ostringstream &str ) const
         str << buf;
         
         if (t <= 5)
-            str << " ({hh" << ch->in_room->area->name << "{hx)" << GQChannel::NORMAL;
+            str << " ({hh" << ch->in_room->areaInstance->area->name << "{hx)" << GQChannel::NORMAL;
         
         str << endl;
     }

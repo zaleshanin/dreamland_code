@@ -111,17 +111,18 @@ void Movement::place( Character *wch )
     char_from_room( wch );
     char_to_room( wch, to_room );
 
-    if (old_room->area != to_room->area 
+    if (old_room->areaInstance->area != to_room->areaInstance->area
             && IS_AWAKE( wch ) 
-            && !IS_SET(to_room->area->area_flag, AREA_HIDDEN)
+            && !IS_SET(to_room->areaInstance->area->area_flag, AREA_HIDDEN)
             && !eyes_blinded( wch )
             && !eyes_darkened( wch ))
     {
-        int helpId = get_area_help_id(to_room->area);
+        AREA_DATA *area = to_room->areaInstance->area;
+        int helpId = get_area_help_id(area);
         if (helpId >= 0)
-            wch->printf("Ты попадаешь в местность '{c{hh%d%s{x'.\r\n\r\n", helpId, to_room->area->name);
+            wch->printf("Ты попадаешь в местность '{c{hh%d%s{x'.\r\n\r\n", helpId, area->name);
         else
-            wch->printf("Ты попадаешь в местность '{c{hh%s{x'.\r\n\r\n", to_room->area->name);
+            wch->printf("Ты попадаешь в местность '{c{hh%s{x'.\r\n\r\n", area->name);
     }
  
     interpret_raw( wch, "look", "move" );

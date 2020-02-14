@@ -11,6 +11,7 @@
 #include "dlscheduler.h"
 #include "schedulertaskroundplugin.h"
 #include "plugininitializer.h"
+#include "pcharactermanager.h"
 
 #include <skill.h>
 #include <spell.h>
@@ -39,6 +40,7 @@
 #include "act.h"
 #include "save.h"
 #include "act_move.h"
+#include "update_areas.h"
 #include "vnum.h"
 #include "mercdb.h"
 #include "comm.h"
@@ -72,6 +74,16 @@ AreaHelp * get_area_help(AREA_DATA *area)
     return 0;
 }
 
+bool area_instance_error(Character *ch)
+{
+    if (ch->in_room && !ch->in_room->areaInstance->isPrimary()) {
+        ch->println("Ты не можешь использовать эту команду изнутри экземпляра арии.");
+        ch->printf("Перейди в комнату-прототип: {y{hcredit goto %d{x\r\n", ch->in_room->vnum);
+        return true;
+    }
+    return false;
+}
+
 
 static int next_index_data( Character *ch, Room *r, int ndx_type )
 {
@@ -80,7 +92,7 @@ static int next_index_data( Character *ch, Room *r, int ndx_type )
     if (!r)
         return -1;
 
-    pArea = r->area;
+    pArea = r->areaInstance->area;
     if (!pArea)
         return -1;
 
@@ -472,7 +484,7 @@ CMD(resets, 50, "", POS_DEAD, 103, LOG_ALWAYS,
                      pRoom->reset_last = pRoom->reset_last->next);
             }
             free_reset_data(pReset);
-            SET_BIT(ch->in_room->area->area_flag, AREA_CHANGED);
+            SET_BIT(ch->in_room->areaInstance->area->area_flag, AREA_CHANGED);
             stc("Reset deleted.\n\r", ch);
         }
         else if ((!str_cmp(arg2, "mob") && is_number(arg3))
@@ -536,7 +548,7 @@ CMD(resets, 50, "", POS_DEAD, 103, LOG_ALWAYS,
                 }
             }
             add_reset(ch->in_room, pReset, atoi(arg1));
-            SET_BIT(ch->in_room->area->area_flag, AREA_CHANGED);
+            SET_BIT(ch->in_room->areaInstance->area->area_flag, AREA_CHANGED);
             stc("Reset added.\n\r", ch);
         }
         else {
@@ -553,6 +565,67 @@ CMD(alist, 50, "", POS_DEAD, 103, LOG_ALWAYS,
         "List areas.")
 {
     AREA_DATA *pArea;
+    DLString args = argument;
+    DLString arg1 = args.getOneArgument();
+    DLString arg2 = args.getOneArgument();
+
+    if (arg_oneof(arg1, "instance", "экземпляр")) {
+        if (arg_oneof(arg2, "create", "создать")) {
+            if (args.empty()) {
+                ch->println("Формат: alist instance create <keyword>");
+                return;
+            }
+
+            PCMemoryInterface *player = PCharacterManager::find(args);
+            if (!player) {
+                ch->printf("Персонаж %s не найден.\r\n", args.c_str());
+                return;                
+            }
+
+            pArea = ch->in_room->areaInstance->area;
+
+            if (create_area_instance(pArea, player))
+                ch->printf("Создан экземпляр арии %s для персонажа %s.\r\n",
+                           pArea->name, player->getName().c_str());
+            else
+                ch->printf("Экземпляр арии %s для персонажа %s уже существует.\r\n",
+                           pArea->name, player->getName().c_str());
+
+            return;
+        }
+
+        if (arg_oneof(arg2, "reset", "сбросить")) {
+            if (args.empty()) {
+                ch->println("Формат: alist instance reset <keyword>");
+                return;
+            }
+
+            pArea = ch->in_room->areaInstance->area;
+            AreaInstance *ai = pArea->getInstance(args.toLower());
+            if (!ai) {
+                ch->println("Экземпляр с таким именем не найден, используй {y{hcalist instance{x для списка.");
+                return;
+            }
+
+            reset_area_instance(ai);
+            ch->printf("Экземпляр арии %s для персонажа %s успешно сброшен.\r\n",
+                       pArea->name, ai->key.c_str());
+            return;
+        }
+
+        ch->println("Все зоны с экземплярами:");
+        for (pArea = area_first; pArea; pArea = pArea->next) {
+            if (pArea->instances.size() > 1) {
+                ch->println(dlprintf("{W[%3d] %-30s{x", pArea->vnum, pArea->name));
+                for (auto ai: pArea->instances)
+                    if (!ai->isPrimary())
+                        ch->println(dlprintf("    имя {C%s{x, персонажей %d, прототипов мобов %d, возраст %d",
+                                ai->key.c_str(), ai->nplayer, ai->mobs.size(), ai->age));
+            }
+        }
+        return;
+    }
+
 
     const DLString lineFormat = 
             "[" + web_cmd(ch, "aedit $1", "%3d") 
@@ -646,7 +719,7 @@ CMD(abc, 50, "", POS_DEAD, 106, LOG_ALWAYS, "")
             if (!room->isCommon() && room->clan == clan_none)
                 continue;
 
-            if (!str_cmp(room->area->area_file->file_name, "galeon.are"))
+            if (!str_cmp(room->areaInstance->area->area_file->file_name, "galeon.are"))
                 continue;
 
             DLString myword;
@@ -685,7 +758,7 @@ CMD(abc, 50, "", POS_DEAD, 106, LOG_ALWAYS, "")
         const DLString lineFormat = "[" + web_cmd(ch, "goto $1", "%5d") + "] %-35s{x [{C%s{x]";
         for (auto room: roomPrototypes) {
             ostringstream *buf;
-            if (IS_SET(room->room_flags, ROOM_MANSION) || !str_prefix("ht", room->area->area_file->file_name))
+            if (IS_SET(room->room_flags, ROOM_MANSION) || !str_prefix("ht", room->areaInstance->area->area_file->file_name))
                 buf = &mbuf;
             else if (room->clan != clan_none)
                 buf = &cbuf;
@@ -770,14 +843,14 @@ CMD(abc, 50, "", POS_DEAD, 106, LOG_ALWAYS, "")
                         continue;
                     if (obj->in_room == NULL)
                         continue;
-                    if (obj->pIndexData->area == obj->in_room->area)
+                    if (obj->pIndexData->area == obj->in_room->areaInstance->area)
                         continue;
                     if (obj->timestamp > 0)
                         continue;
                     
                     ch->printf("Found %s [%d] in [%d] %s\r\n", 
                             obj->getShortDescr('1').c_str( ), obj->pIndexData->vnum,
-                            obj->in_room->vnum, obj->in_room->area->name);
+                            obj->in_room->vnum, obj->in_room->areaInstance->area->name);
             }
 
             return;
@@ -797,7 +870,7 @@ CMD(abc, 50, "", POS_DEAD, 106, LOG_ALWAYS, "")
                     continue;
                 if (obj->in_room == NULL)
                     continue;
-                if (obj->pIndexData->area == obj->in_room->area)
+                if (obj->pIndexData->area == obj->in_room->areaInstance->area)
                     continue;
                 if (obj->timestamp > 0)
                     continue;
@@ -806,7 +879,7 @@ CMD(abc, 50, "", POS_DEAD, 106, LOG_ALWAYS, "")
                 save_items( obj->in_room );
                 ch->printf("Marking %s [%d] in [%d] %s\r\n", 
                         obj->getShortDescr('1').c_str( ), obj->pIndexData->vnum,
-                            obj->in_room->vnum, obj->in_room->area->name);
+                            obj->in_room->vnum, obj->in_room->areaInstance->area->name);
         }
         ch->println("Done marking limits.");
         return;

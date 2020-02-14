@@ -16,6 +16,7 @@ DLString russian_case( const DLString & description, char gram_case );
 bool        is_number        ( const char *arg );
 bool    is_positive_number( const char *arg );
 int        number_argument        ( char *argument, char *arg );
+bool number_argument( const DLString &cArgs, Integer &number, DLString &argument );
 int        mult_argument        ( char *argument, char *arg );
 char *        one_argument        ( char *argument, char *arg_first );
 char *  str_str(char *cs, const char *ct);

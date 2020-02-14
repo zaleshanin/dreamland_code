@@ -361,6 +361,9 @@ void save_room_objects( Room *room )
         return;
     }
 
+    if (room->isInstance())
+        return;
+
     sprintf( fname, "%s/%s/%d/%d", dreamland->getSavedDir( ).getPath( ).c_str( ),"objects", room->vnum % 16, room->vnum );
 
     if ( (fp = fopen(fname,"w")) == NULL )
@@ -396,7 +399,7 @@ void save_room_objects( Room *room )
 
 void save_items ( Room *room )
 {
-        if ( room != 0 && dreamland->hasOption( DL_SAVE_OBJS ))
+        if ( room != 0 && dreamland->hasOption( DL_SAVE_OBJS ) && !room->isInstance())
         {
                 save_room_objects( room );
         }
@@ -419,6 +422,9 @@ void save_room_mobiles( Room *room )
             bug("Save_room_mobiles: null room",0);
             return;
     }
+
+    if (room->isInstance())
+        return;
 
     sprintf( fname, "%s/%s/%d/%d", dreamland->getSavedDir( ).getPath( ).c_str( ),"mobiles", room->vnum % 16, room->vnum );
 
@@ -451,7 +457,8 @@ void save_room_mobiles( Room *room )
 
 void save_mobs ( Room *room )
 {
-    if ( room != 0 && dreamland->hasOption( DL_SAVE_MOBS ) )
+
+    if ( room != 0 && dreamland->hasOption( DL_SAVE_MOBS ) && !room->isInstance())
     {
             save_room_mobiles( room );
     }

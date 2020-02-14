@@ -549,7 +549,7 @@ void save_rooms(FILE * fp, AREA_DATA * pArea)
 {
     fprintf(fp, "#ROOMS\n");
 
-    for (auto i: pArea->rooms) {
+    for (auto i: pArea->getDefaultInstance()->rooms) {
         save_room(fp, i.second);
     }
 
@@ -601,7 +601,7 @@ void save_door_resets(FILE * fp, AREA_DATA * pArea)
     EXIT_DATA *pExit;
     int door;
 
-    for (auto i: pArea->rooms) {
+    for (auto i: pArea->getDefaultInstance()->rooms) {
         pRoomIndex = i.second;
 
         for (door = 0; door < DIR_SOMEWHERE; door++) {
@@ -630,7 +630,7 @@ void save_resets(FILE * fp, AREA_DATA * pArea)
 
     save_door_resets(fp, pArea);
 
-    for (auto i: pArea->rooms) {
+    for (auto i: pArea->getDefaultInstance()->rooms) {
         pRoom = i.second;
 
         for (pReset = pRoom->reset_first; pReset; pReset = pReset->next)
@@ -871,7 +871,7 @@ CMD(asavecompat, 50, "", POS_DEAD, 103, LOG_ALWAYS,
 
     // Save area being edited, if authorized
     if (!str_cmp(arg1, "area")) {
-        pArea = ch->in_room->area;
+        pArea = ch->in_room->areaInstance->area;
 
         if (IS_SET(pArea->area_flag, AREA_SAVELOCK)) {
             ptc(ch, "Area %s was not saved! (Locked from saving)\n\r", ch);

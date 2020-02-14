@@ -151,7 +151,7 @@ bool GateMovement::checkVictim( )
         if (!is_safe_nomessage(ch, victim) 
             && IS_SET(victim->act, PLR_NOSUMMON) 
             && spell 
-            && from_room->area != to_room->area)
+            && from_room->areaInstance != to_room->areaInstance)
             return false;
         
         if (is_safe_nomessage(ch, victim) && IS_SET(victim->act, PLR_NOSUMMON))
@@ -306,7 +306,7 @@ bool SummonMovement::tryMove( Character *wch )
 
 bool SummonMovement::applyLazy( )
 {
-    if (caster->in_room->area == ch->in_room->area) {
+    if (caster->in_room->areaInstance == ch->in_room->areaInstance) {
         caster->pecho( "Может, пора пройтись пешком?" );
         return false;
     }

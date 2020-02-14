@@ -30,7 +30,7 @@ GQChannel::~GQChannel( )
     thisClass = NULL;
 }
     
-void GQChannel::zecho( GlobalQuest *gquest, AREA_DATA *area, const DLString& msg ) 
+void GQChannel::zecho( GlobalQuest *gquest, AreaInstance *ai, const DLString& msg ) 
 {
     Descriptor *d;
     Character *ch;
@@ -42,7 +42,7 @@ void GQChannel::zecho( GlobalQuest *gquest, AREA_DATA *area, const DLString& msg
         if (d->connected != CON_PLAYING)
             continue;
 
-        if (!(ch = d->character) || ch->in_room->area != area)
+        if (!(ch = d->character) || ch->in_room->areaInstance != ai)
             continue;
         
         if (gquest->isLevelOK( ch ))

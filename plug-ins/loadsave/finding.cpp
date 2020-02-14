@@ -167,7 +167,7 @@ Character *get_char_area( Character *ch, char *argument )
         {
                 if ( ach->in_room == 0
                         || ach->in_room == ch->in_room
-                        || ach->in_room->area != ch->in_room->area
+                        || ach->in_room->areaInstance != ch->in_room->areaInstance
                         || !ch->can_see( ach )
                         || (id && ach->getID( ) != id)
                         || (!id && !char_has_name(ach, arg)) )
@@ -497,6 +497,16 @@ Object *get_obj_world( Character *ch, char *argument )
     return 0;
 }
 
+int count_mob_room(Room *room, int vnum)
+{
+    int count = 0;
+
+    for (Character *vch = room->people; vch; vch = vch->next_in_room )
+        if (vch->is_npc() && vch->getNPC()->pIndexData->vnum == vnum)
+            count++;
+
+    return count;
+}
 
 /*
  * Count character with specified name in the room
@@ -694,6 +704,36 @@ Object * get_obj_room_vnum( Room *room, int vnum )
     for (obj = room->contents; obj; obj = obj->next_content)
         if (obj->pIndexData->vnum == vnum)
             return obj;
+
+    return NULL;
+}
+
+Object * get_obj_list_vnum( Object *list, int vnum )
+{
+    Object *obj;
+
+    for (obj = list; obj; obj = obj->next_content) 
+        if (obj->pIndexData->vnum == vnum)
+            return obj;
+    
+    return NULL;
+}
+
+Object * get_obj_here_vnum( Room *room, int vnum )
+{
+    Object *obj, *result;
+    
+    for (obj = room->contents; obj; obj = obj->next_content) {
+        if (obj->pIndexData->vnum == vnum)
+            return obj;
+            
+        if (( result = get_obj_list_vnum( obj->contains, vnum ) ))
+            return result;
+    }
+
+    for (Character *rch = room->people; rch; rch = rch->next_in_room)
+        if (rch->is_npc() && ( result = get_obj_list_vnum(rch->carrying, vnum )))
+            return result;
 
     return NULL;
 }
@@ -1008,20 +1048,20 @@ Room * get_room_instance(int vnum, DLString key)
         bug("room: proto not found for %d %s", vnum, key.c_str());
         return 0;
     }
-
+    
     // See if this area has a copy created for the player.
-    auto ai = proto->area->instances.find(key);
-    if (ai == proto->area->instances.end()) {
+    AreaInstance *ai = proto->areaInstance->area->getInstance(key);
+    if (!ai) {
         notice("room: no instance found for %d %s, fall back to proto", vnum, key.c_str());
         return proto;
     }
 
     // See if there is a room instance inside that copy.
-    auto room = ai->second.rooms.find(vnum);
-    if (room == ai->second.rooms.end()) {
+    Room *room = ai->getRoom(vnum);
+    if (!room) {
         bug("room: vnum %d not found in existing instance for %s", vnum, key.c_str());
         return proto;
     }
 
-    return room->second;
+    return room;
 }

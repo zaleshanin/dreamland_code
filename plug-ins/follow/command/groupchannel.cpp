@@ -56,7 +56,7 @@ void GroupChannel::triggers( Character *ch, const DLString &msg ) const
         if (pet)
             tell_raw( ch, pet, "%s, я нахожусь в {hh%s{hx - %s",
                         GET_SEX( ch, "Хозяин", "Хозяин", "Хозяйка"),
-                        pet->in_room->area->name, pet->in_room->name );
+                        pet->in_room->areaInstance->area->name, pet->in_room->name );
     }
 }
 

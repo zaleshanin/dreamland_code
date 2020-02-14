@@ -259,7 +259,7 @@ bool spec_patrolman(NPCharacter *ch)
                     continue;
 
             if (vch->in_room != ch->in_room
-            &&  vch->in_room->area == ch->in_room->area)
+            &&  vch->in_room->areaInstance == ch->in_room->areaInstance)
                     vch->send_to("До тебя доносится пронзительный свист.\n\r");
             }
     }
@@ -813,7 +813,7 @@ bool spec_guard( NPCharacter *ch )
     {
         v_next = victim->next_in_room;
 
-        if (IS_SET( ch->in_room->area->area_flag, AREA_HOMETOWN )
+        if (IS_SET( ch->in_room->areaInstance->area->area_flag, AREA_HOMETOWN )
                 && number_percent() < 2
                 && !victim->is_immortal( ))
         {
@@ -824,7 +824,7 @@ bool spec_guard( NPCharacter *ch )
             if (!victim->is_npc())
                 room = get_room_index( victim->getPC()->getHometown( )->getRecall() );
 
-            if (!room || ch->in_room->area != room->area)
+            if (!room || ch->in_room->areaInstance->area != room->areaInstance->area)
             {
                 do_say( ch, "Я не знаю тебя. Уходи прочь!");
             }
@@ -874,7 +874,7 @@ bool spec_guard( NPCharacter *ch )
         interpret_raw(ch, "cb", "ВНИМАНИЕ!!! %s находится %s в районе %s",
                         victim->getNameP(), 
                         ch->in_room->name, 
-                        ch->in_room->area->name);
+                        ch->in_room->areaInstance->area->name);
 
         if ( ( ch->getModifyLevel() + 8 > victim->getModifyLevel() )
                 && !is_safe_nomessage( ch, victim ))

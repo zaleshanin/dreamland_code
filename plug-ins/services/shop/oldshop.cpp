@@ -642,7 +642,7 @@ ShopTrader::Pointer find_keeper( Character *ch )
         return null;
     }
     
-    if ( IS_SET(keeper->in_room->area->area_flag,AREA_HOMETOWN)
+    if ( IS_SET(keeper->in_room->areaInstance->area->area_flag,AREA_HOMETOWN)
          && !ch->is_npc() && IS_SET(ch->act,PLR_WANTED) )
     {
         do_say( keeper, "Преступникам не место здесь!" );

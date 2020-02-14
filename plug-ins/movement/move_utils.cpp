@@ -111,7 +111,7 @@ Room * get_random_room_vanish( Character *ch )
     int count = 0;
 
     for (auto room: roomPrototypes) {
-        if (room->area != ch->in_room->area || room == ch->in_room)
+        if (room->areaInstance != ch->in_room->areaInstance || room == ch->in_room)
             continue;
         
         if (IS_SET(room->room_flags, ROOM_NO_VANISH|ROOM_SAFE)) 

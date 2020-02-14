@@ -85,9 +85,6 @@ XMLAreaHeader::compat( )
 
     AREA_DATA *a = new AREA_DATA;
     
-    a->age                = 15;
-    a->nplayer        = 0;
-    a->empty        = false;
     a->count        = 0;
     a->next        = 0;
     a->vnum                = top_area++;
@@ -231,15 +228,11 @@ XMLArea::load_rooms(AREA_DATA *a)
             throw FileFormatException("Load_rooms: vnum %d duplicated", vnum);
 
         Room *room = rit->second.compat(vnum);
-        room->area = a;
 
         if(3000 <= vnum && vnum < 3400)
             SET_BIT(room->room_flags, ROOM_LAW);
 
-        room->area->rooms[vnum] = room;
-        roomPrototypeMap[vnum] = room;
-        roomPrototypes.push_back(room);
-        roomInstances.push_back(room);
+        a->addRoomProto(room);
 
         if (FeniaManager::wrapperManager)
             FeniaManager::wrapperManager->linkWrapper(room);

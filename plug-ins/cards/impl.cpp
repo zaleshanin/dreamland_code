@@ -60,7 +60,7 @@ public:
                 continue;
             if (!IS_SET(mob->form, FORM_BIPED|FORM_MAMMAL))
                 continue;
-            if (IS_SET(mob->in_room->area->area_flag, AREA_HIDDEN|AREA_NOQUEST|AREA_WIZLOCK))
+            if (IS_SET(mob->in_room->areaInstance->area->area_flag, AREA_HIDDEN|AREA_NOQUEST|AREA_WIZLOCK))
                 continue;
             if (IS_SET(mob->in_room->room_flags, ROOM_SAFE|ROOM_NO_DAMAGE))
                 continue;

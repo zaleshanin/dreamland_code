@@ -123,7 +123,7 @@ static void c7i_room( FILE *fp, AREA_DATA *ourArea )
         return;
     }
 
-    if (room->area != ourArea) {
+    if (room->areaInstance->area != ourArea) {
         LogStream::sendError() << "Native room #" << vnum << " doesn't belong to same area, skipping." << endl;
         skip_section(fp);
         return;

@@ -325,7 +325,7 @@ bool BasicMobileBehavior::doScavenge( )
     if (!IS_AWAKE(ch))
         return false;
         
-    if (ch->in_room->area->empty)
+    if (ch->in_room->areaInstance->empty)
         return false;
 
     if (ch->in_room->contents == 0)
@@ -471,7 +471,7 @@ bool BasicMobileBehavior::doWander( )
     if (ch->position != POS_STANDING)
         return false;
     
-    if (ch->in_room->area->empty)
+    if (ch->in_room->areaInstance->empty)
         return false;
 
     if (IS_SET(ch->in_room->room_flags, ROOM_MANSION)) {
@@ -499,7 +499,7 @@ bool BasicMobileBehavior::doWander( )
     if (IS_SET( room->room_flags, ROOM_NO_MOB ))
         return false;
         
-    if (IS_SET(ch->act, ACT_STAY_AREA) && room->area != ch->in_room->area)
+    if (IS_SET(ch->act, ACT_STAY_AREA) && room->areaInstance != ch->in_room->areaInstance)
         return false;
 
     if (IS_SET(ch->act, ACT_OUTDOORS) && IS_SET( room->room_flags,ROOM_INDOORS|ROOM_MANSION))

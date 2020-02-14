@@ -165,7 +165,6 @@ SKILL_RUNP( fade )
 SPELL_DECL(EvilSpirit);
 VOID_SPELL(EvilSpirit)::run( Character *ch, Room *room, int sn, int level ) 
 { 
- AREA_DATA *pArea = room->area;
  Affect af,af2;
 
  if (IS_RAFFECTED(room, AFF_ROOM_ESPIRIT)
@@ -182,7 +181,7 @@ VOID_SPELL(EvilSpirit)::run( Character *ch, Room *room, int sn, int level )
     }
 
   if (IS_SET(room->room_flags, ROOM_LAW)
-        || IS_SET(room->area->area_flag,AREA_HOMETOWN) )
+        || IS_SET(room->areaInstance->area->area_flag,AREA_HOMETOWN) )
     {
       ch->send_to("Святая аура в этой комнате не дает творить зло.\n\r");
       return;
@@ -205,7 +204,7 @@ VOID_SPELL(EvilSpirit)::run( Character *ch, Room *room, int sn, int level )
     af.modifier  = 0;
     af.bitvector = AFF_ROOM_ESPIRIT;
 
-    for (auto i: pArea->rooms)
+    for (auto i: room->areaInstance->rooms)
     {
         room = i.second;
         room->affectTo( &af );

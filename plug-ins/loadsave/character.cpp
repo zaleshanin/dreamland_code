@@ -39,7 +39,7 @@ bool Character::can_see( Room *pRoomIndex ) const
                 && !is_immortal() )
                 return false;
 
-        if ( IS_SET(pRoomIndex->area->area_flag, AREA_WIZLOCK) 
+        if ( IS_SET(pRoomIndex->areaInstance->area->area_flag, AREA_WIZLOCK) 
                 && !is_immortal() )
                 return false;
 

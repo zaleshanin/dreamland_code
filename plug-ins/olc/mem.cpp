@@ -78,9 +78,6 @@ void init_area(AREA_DATA *pArea)
     pArea->max_vnum = 0;
     pArea->low_range = 0;
     pArea->high_range = 0;
-    pArea->age = 0;
-    pArea->nplayer = 0;
-    pArea->empty = true;
     pArea->credits = str_dup("None");
     pArea->resetmsg = str_dup("");
     pArea->vnum = top_area - 1;
@@ -181,7 +178,7 @@ Room *new_room_index(void)
     pRoom->people = NULL;
     pRoom->contents = NULL;
     pRoom->extra_descr = NULL;
-    pRoom->area = NULL;
+    pRoom->areaInstance = NULL;
     pRoom->extra_exit = NULL;
 
     for (door = 0; door < DIR_SOMEWHERE; door++)

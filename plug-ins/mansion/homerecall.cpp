@@ -213,7 +213,7 @@ static void print_room( int vnum, ostringstream &buf )
         return;
     }
 
-    buf << "[" << vnum << "] " << room->name << " (" << room->area->name << ")" << endl;
+    buf << "[" << vnum << "] " << room->name << " (" << room->areaInstance->area->name << ")" << endl;
 }
 
 void HomeRecall::doShow( PCharacter * ch, DLString &arg )
@@ -292,7 +292,7 @@ void HomeRecall::doList( PCharacter *ch )
         sprintf( buf, "%-15s [%-5d] %-25.25s (%s)\r\n", 
                  i->second->getName( ).c_str( ), point, 
                  (room ? room->name : "{Rnull!{x"),
-                 (room ? room->area->name : "") );
+                 (room ? room->areaInstance->area->name : "") );
 
         ch->send_to( buf );
     }
@@ -306,7 +306,7 @@ static void print_room_mortal( int vnum, ostringstream &buf )
         return;
     }
 
-    buf << room->name << " (" << room->area->name << ")" << endl;
+    buf << room->name << " (" << room->areaInstance->area->name << ")" << endl;
 }
 
 void HomeRecall::doListMortal( PCharacter * ch )

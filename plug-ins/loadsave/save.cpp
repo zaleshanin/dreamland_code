@@ -573,7 +573,7 @@ void fwrite_mob( NPCharacter *mob, FILE *fp)
         fprintf( fp, "Room %d\n", mob->in_room->vnum );
 
         if ( mob->zone )
-                fprintf( fp, "RZone %s~\n", mob->zone->area_file->file_name );
+                fprintf( fp, "RZone %s~\n", mob->zone->area->area_file->file_name );
         if (mob->reset_room != 0)
             fprintf(fp, "RRoom %d\n", mob->reset_room); 
 
@@ -1742,7 +1742,7 @@ NPCharacter * fread_mob( FILE *fp )
                             for ( pArea = area_first; pArea != 0; pArea = pArea->next )
                                     if ( !str_cmp( zoneName.c_str(), pArea->area_file->file_name ) )
                                     {
-                                            mob->zone = pArea;
+                                            mob->zone = pArea->getDefaultInstance();
                                             fMatch = true;
                                             break;
                                     }

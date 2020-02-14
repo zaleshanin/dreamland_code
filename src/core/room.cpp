@@ -23,7 +23,7 @@ PROF(none);
 Room::Room( ) : 
                 reset_first( 0 ), reset_last( 0 ),
                 people( 0 ), contents( 0 ), extra_descr( 0 ),
-                area( 0 ), extra_exit( 0 ),
+                extra_exit( 0 ),
                 name( 0 ), description( 0 ), owner( 0 ),
                 vnum( 0 ), room_flags( 0 ), room_flags_default( 0 ),
                 light( 0 ), sector_type( 0 ),
@@ -33,7 +33,8 @@ Room::Room( ) :
                 guilds( professionManager ),
                 affected( 0 ), affected_by( 0 ),
                 liquid( "none" ),
-                behavior( RoomBehavior::NODE_NAME )
+                behavior( RoomBehavior::NODE_NAME ),
+                areaInstance( 0 ), pIndexData(0)
 {
     for (int i = 0; i < DIR_SOMEWHERE; i++) 
         exit[i] = old_exit[i] = 0;
@@ -82,7 +83,7 @@ bool Room::isCommon( )
     if (IS_SET(room_flags,ROOM_NEWBIES_ONLY))
         return false;
 
-    if (IS_SET(area->area_flag, AREA_WIZLOCK))
+    if (IS_SET(areaInstance->area->area_flag, AREA_WIZLOCK))
         return false;
 
     if (clan != clan_none)
@@ -121,5 +122,10 @@ bool Room::isDark( ) const
 
 bool Room::isInstance() const
 {
-    return !instance.empty();
+    return pIndexData != 0;
+}
+
+Room * Room::getProto()
+{
+    return pIndexData ? pIndexData : this;
 }

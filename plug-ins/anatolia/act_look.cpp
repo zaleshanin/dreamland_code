@@ -1199,9 +1199,12 @@ rprog_eexit_descr( Room *room, EXTRA_EXIT_DATA *peexit, Character *ch, const DLS
     
     buf << "{" << CLR_RNAME(ch) << room->name << "{x";
 
-    if (ch->getConfig( )->holy) 
-        buf << " {" << CLR_RVNUM(ch) << "[Room " << room->vnum
-            << "][" << room->area->name << "]{x";
+    if (ch->getConfig( )->holy) {
+        buf << " {" << CLR_RVNUM(ch) << "[Room " << room->vnum;
+        if (room->isInstance())
+            buf << "." << room->areaInstance->key;
+        buf  << "][" << room->areaInstance->area->name << "]{x";
+    }
 
     buf << " " << web_edit_button(ch, "redit|show", room->vnum);
     

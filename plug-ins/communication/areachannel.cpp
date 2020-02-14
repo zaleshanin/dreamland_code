@@ -11,7 +11,7 @@
 
 #include "npcharacter.h"
 #include "room.h"
-#include "object.h"
+#include "core/object.h"
 #include "descriptor.h"
 #include "loadsave.h"
 #include "interp.h"
@@ -28,7 +28,7 @@ AreaChannel::AreaChannel( )
 
 bool AreaChannel::isGlobalListener( Character *ch, Character *victim ) const
 {
-    if (victim->in_room->area != ch->in_room->area)
+    if (victim->in_room->areaInstance != ch->in_room->areaInstance)
         return false;
 
     return WorldChannel::isGlobalListener( ch, victim );
@@ -42,7 +42,7 @@ void AreaChannel::triggers( Character *ch, const DLString &msg ) const
     chanID.upperFirstCharacter( );
         
     for (Character *wch = char_list; wch; wch = wch->next) {
-        if (wch->in_room->area == ch->in_room->area) {
+        if (wch->in_room->areaInstance == ch->in_room->areaInstance) {
             FENIA_VOID_CALL( wch, chanID, "Cs", ch, str );
             
             if (wch->is_npc( ))

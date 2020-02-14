@@ -58,7 +58,7 @@ static bool get_obj_resets( int vnum, AREA_DATA *&pArea, DLString &where )
                         MOB_INDEX_DATA *pMob = get_mob_index( mobVnum );
                         if (pMob) {
                             // Return success
-                            pArea = room->area;
+                            pArea = room->areaInstance->area;
                             where = russian_case(pMob->short_descr, '1');
                             return true;
                         }
@@ -67,7 +67,7 @@ static bool get_obj_resets( int vnum, AREA_DATA *&pArea, DLString &where )
                 case 'O':
                     if (pReset->arg1 == vnum) { 
                         // Object is on the floor, return success.
-                        pArea = room->area;
+                        pArea = room->areaInstance->area;
                         where = room->name;
                         return true;
                     }
@@ -78,7 +78,7 @@ static bool get_obj_resets( int vnum, AREA_DATA *&pArea, DLString &where )
                         OBJ_INDEX_DATA *in = get_obj_index( pReset->arg3 );
                         if (in) {
                             // Return success.
-                            pArea = room->area;
+                            pArea = room->areaInstance->area;
                             where = room->name;
                             return true;
                         }

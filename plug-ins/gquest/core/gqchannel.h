@@ -24,7 +24,7 @@ public:
     GQChannel( );
     virtual ~GQChannel( );
 
-    static void zecho( GlobalQuest *, struct area_data*, const DLString& );
+    static void zecho( GlobalQuest *, struct AreaInstance*, const DLString& );
     static void gecho( GlobalQuestInfo *, const DLString& );
     static void gecho( GlobalQuest *, const DLString&, PCharacter *pch = NULL);
     static void gecho( GlobalQuest *, ostringstream & );

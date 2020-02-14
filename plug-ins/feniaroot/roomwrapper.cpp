@@ -108,13 +108,13 @@ NMI_GET( RoomWrapper, name , "название комнаты")
 NMI_GET( RoomWrapper, areaname , "имя арии")
 {
     checkTarget( );
-    return Register( target->area->name );
+    return Register( target->areaInstance->area->name );
 }
 
 NMI_GET( RoomWrapper, area, "экземпляр Area для этой комнаты")
 {
     checkTarget( );
-    return AreaWrapper::wrap( target->area->area_file->file_name );
+    return AreaWrapper::wrap( target->areaInstance->area->area_file->file_name );
 }
 
 NMI_GET(RoomWrapper, ppl, "список (List) всех чаров в комнате")
@@ -465,7 +465,7 @@ NMI_INVOKE(RoomWrapper, zecho, "(msg): выведет сообщение msg д�
     checkTarget( );
     
     for (wch = char_list; wch; wch = wch->next) 
-        if (wch->in_room->area == target->area) 
+        if (wch->in_room->areaInstance == target->areaInstance) 
             wch->println(msg);
 
     return Register( );

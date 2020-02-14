@@ -117,21 +117,48 @@ void do_oload                ( Character *, char * );
 RELIG(none);
 
 /*
- * Local functions.
+ * Find room target for goto, allowed syntax:
+ * [0-9]+ -- room vnum
+ * vnum.name -- room instance vnum and key
+ * char name
+ * obj name
  */
-static Room * find_location( Character *ch, char *arg )
+static Room * find_location( Character *ch, char *cargs )
 {
     Character *victim;
     Object *obj;
+    DLString args(cargs);
 
-    if ( is_number(arg) )
-        return get_room_index( atoi( arg ) );
+    if (args.empty())
+        return 0;
 
-    if ( ( victim = get_char_world( ch, arg ) ) != 0 )
+    // 'Goto 1234' or 'goto 1234.masha':
+    if (isdigit(args.at(0))) {
+        Integer vnum;
+        DLString name;
+
+        if (number_argument(args, vnum, name)) {
+            ch->printf("(локация - экземпляр комнаты [%d] под именем %s)\r\n", vnum.getValue(), name.c_str());
+            return get_room_instance(vnum, name);
+        }
+
+        if (args.isNumber() && Integer::tryParse(vnum, args)) {
+            ch->printf("(локация - комната с номером %d)\r\n", vnum.getValue());
+            return get_room_index(vnum);
+        }
+    }
+
+    // 'goto mermaid' or 'goto 3.mermaid'
+    if ( ( victim = get_char_world( ch, cargs ) ) != 0 ) {
+        ch->printf("(локация - персонаж/моб под именем %s)\r\n", victim->getNameP('1').c_str());
         return victim->in_room;
+    }
 
-    if ( ( obj = get_obj_world( ch, arg ) ) != 0 )
+    // 'goto fountain' or 'goto 2.fridge'
+    if ( ( obj = get_obj_world( ch, cargs ) ) != 0 ) {
+        ch->printf("(локация - предмет под именем %s [%d])\r\n", obj->getShortDescr('1').c_str(), obj->pIndexData->vnum);
         return obj->in_room;
+    }
 
     return 0;
 }
@@ -911,16 +938,17 @@ CMDWIZP( stat )
         return;
     }
 
-    if (ch->in_room->affected_by)
+    if (location->affected_by)
     {
         sprintf(buf, "Affected by %s\n\r",
-            raffect_flags.messages(ch->in_room->affected_by).c_str( ));
+            raffect_flags.messages(location->affected_by).c_str( ));
         ch->send_to(buf);
     }
 
-    sprintf( buf, "Name: '%s'\n\rArea: '%s'\n\rOwner: '%s' Clan: '%s'\n\r",
+    sprintf( buf, "Name: '%s'\n\rArea: '%s' {C%s{x\n\rOwner: '%s' Clan: '%s'\n\r",
         location->name,
-        location->area->name ,
+        location->areaInstance->area->name,
+        location->areaInstance->key.c_str(),
         location->owner,
         location->clan->getShortName( ).c_str( ) );
     ch->send_to(buf);
@@ -1370,7 +1398,7 @@ static bool has_nopost(Character *ch)
     if (pc)
         buf << "RName: [" << pc->getRussianName( ).normal( ) << "] ";
     if (npc)
-        buf << "Reset Zone: " << (npc->zone ? npc->zone->name : "?");
+        buf << "Reset Zone: " << (npc->zone ? npc->zone->area->name : "?");
     buf << endl;
     
     if (npc)
@@ -1773,7 +1801,7 @@ CMDWIZP( rwhere )
 
     for (auto r: roomPrototypes)
         if (is_name(argument, r->name)) {
-            buf << dlprintf("[%6d] %-30s %s\r\n", r->vnum, r->name, r->area->name);
+            buf << dlprintf("[%6d] %-30s %s\r\n", r->vnum, r->name, r->areaInstance->area->name);
             found = true;
         }
 
@@ -1893,16 +1921,18 @@ CMDWIZP( mwhere )
                 count++;
 
                 if (victim->is_npc( ))
-                    sprintf(buf,"%3d) %s (in the body of %s) is in %s [%d]\n\r",
+                    sprintf(buf,"%3d) %s (in the body of %s) is in %s [%d] {C%s{x\n\r",
                             count, 
                             victim->getPC( )->getNameP( ),
                             victim->getNameP('1').c_str( ),
-                            victim->in_room->name, victim->in_room->vnum);
+                            victim->in_room->name, victim->in_room->vnum,
+                            victim->in_room->areaInstance->key.c_str());
                 else
-                    sprintf(buf,"%3d) %s is in %s [%d]\n\r",
+                    sprintf(buf,"%3d) %s is in %s [%d] {C%s{x\n\r",
                             count, 
                             victim->getNameP( ),
-                            victim->in_room->name, victim->in_room->vnum);
+                            victim->in_room->name, victim->in_room->vnum,
+                            victim->in_room->areaInstance->key.c_str());
 
                 buffer << buf;
             }
@@ -1931,11 +1961,12 @@ CMDWIZP( mwhere )
 
         found = true;
         count++;
-        sprintf( buf, "%3d) [%5d] %-28s [%5d] %s\n\r", count,
+        sprintf( buf, "%3d) [%5d] %-28s [%5d] %s {C%s{x\n\r", count,
                 victim->is_npc() ? victim->getNPC()->pIndexData->vnum : 0,
                 victim->is_npc() ? victim->getNameP( '1' ).c_str( ) : victim->getNameP( ),
                 victim->in_room->vnum,
-                victim->in_room->name );
+                victim->in_room->name,
+                victim->in_room->areaInstance->key.c_str());
         buffer << buf;
     }
 

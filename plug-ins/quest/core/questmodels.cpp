@@ -58,7 +58,7 @@ bool RoomQuestModel::checkRoom( PCharacter *ch, Room *room )
     if (IS_SET(room->room_flags, ROOM_SOLITARY|ROOM_PRIVATE|ROOM_NO_QUEST|ROOM_MANSION ))
         return false;
     
-    if (IS_SET( room->area->area_flag, AREA_NOQUEST ))
+    if (IS_SET( room->areaInstance->area->area_flag, AREA_NOQUEST ))
         return false;
     
     if (!room->isCommon( ))
@@ -72,7 +72,7 @@ bool RoomQuestModel::checkRoom( PCharacter *ch, Room *room )
 
 bool RoomQuestModel::checkRoomClient( PCharacter *pch, Room *room ) 
 {
-    if (room->area->low_range > pch->getModifyLevel( ))
+    if (room->areaInstance->area->low_range > pch->getModifyLevel( ))
         return false;
 
     if (!checkRoom( pch, room ))
@@ -90,7 +90,7 @@ bool RoomQuestModel::checkRoomVictim( PCharacter *pch, Room *room, NPCharacter *
     if (IS_SET( room->room_flags, ROOM_SAFE|ROOM_NO_DAMAGE ))
         return false;
 
-    if (IS_SET( room->area->area_flag, AREA_HOMETOWN ))
+    if (IS_SET( room->areaInstance->area->area_flag, AREA_HOMETOWN ))
         return false;
 
     if (!checkRoom( pch, room ))
@@ -156,7 +156,7 @@ RoomVector RoomQuestModel::findClientRooms(PCharacter *pch, struct area_data *ta
     RoomVector result;
 
     for (auto r: roomPrototypes) {
-        if (r->area != targetArea)
+        if (r->areaInstance->area != targetArea)
             continue;
         if (!checkRoomClient( pch, r ))
             continue;
@@ -172,7 +172,7 @@ RoomVector RoomQuestModel::findVictimRooms(PCharacter *pch, struct area_data *ta
     RoomVector result;
 
     for (auto r: roomPrototypes) {
-        if (r->area != targetArea)
+        if (r->areaInstance->area != targetArea)
             continue;
         if (!checkRoomVictim( pch, r, NULL ))
             continue;
@@ -500,7 +500,7 @@ bool VictimQuestModel::checkMobileVictim( PCharacter *pch, NPCharacter *mob )
     if ((IS_EVIL(mob) && IS_EVIL(pch)) || (IS_GOOD(mob) && IS_GOOD(pch)))
         return false;
 
-    if (mob->in_room->area != mob->pIndexData->area)
+    if (mob->in_room->areaInstance->area != mob->pIndexData->area)
         return false;
 
     if (mob->getRealLevel( ) != mob->pIndexData->level)

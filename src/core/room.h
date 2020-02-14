@@ -21,7 +21,7 @@
 #include "liquid.h"
 #include "roombehavior.h"
 
-struct area_data;
+struct AreaInstance;
 struct extra_descr_data;
 struct exit_data;
 struct extra_exit_data;
@@ -49,7 +49,6 @@ struct RoomHistory : public list<RoomHistoryEntry> {
 };
 
 class Room : public virtual DLObject, public WrapperTarget {
-friend struct area_data;    
 public:
     Room( );
 
@@ -77,6 +76,9 @@ public:
 
     /** Returns true if this is a player-specific instance and not a prototype. */
     bool isInstance() const;
+
+    /** Return original room prototype or self. */
+    Room *getProto();
 
 public:
     reset_data *reset_first;
@@ -108,15 +110,14 @@ public:
     LiquidReference liquid;
     Properties properties;
 
-    /** Name of the player for whom this instance was created. */
-    DLString instance;
-
     XMLPersistentStreamable<RoomBehavior> behavior;
     Scripting::Register init;
 
-protected:
-    /** Area this room prototype belongs to. */
-    area_data *        area;
+    /** Area instance this room belongs to; always a default instance for room prototypes. */
+    AreaInstance *areaInstance;
+
+    /** Room prototype or null, mainly for macro consistency between room/obj/mob. */
+    Room *pIndexData;
 };
 
 

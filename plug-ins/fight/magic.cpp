@@ -153,7 +153,7 @@ void area_message( Character *ch, const DLString &msg, bool everywhere )
         if (wch == ch)
             continue;
         
-        if (wch->in_room->area != ch->in_room->area)
+        if (wch->in_room->areaInstance != ch->in_room->areaInstance)
             continue;
 
         if (!IS_AWAKE(wch))

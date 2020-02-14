@@ -456,8 +456,9 @@ void extract_char( Character *ch, bool count )
     char_from_room( ch );
 
     if (npc) {
-        if (count)
+        if (count) {
             --npc->pIndexData->count;
+        }
     }
 
     /*paranoid*/

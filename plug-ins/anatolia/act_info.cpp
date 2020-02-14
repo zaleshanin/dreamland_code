@@ -327,7 +327,7 @@ CMDRUNP( oscore )
     else
         room = get_room_index( ROOM_VNUM_TEMPLE );
     
-    buf << "  Дом: " << (room ? room->area->name : "Потерян" ) << endl
+    buf << "  Дом: " << (room ? room->areaInstance->area->name : "Потерян" ) << endl
         << dlprintf( "У тебя %d/%d жизни, %d/%d энергии и %d/%d движения.\n\r",
                     ch->hit.getValue( ), ch->max_hit.getValue( ), 
                     ch->mana.getValue( ), ch->max_mana.getValue( ), 
@@ -661,7 +661,7 @@ CMDRUNP( where )
     if (arg.empty( ) || fPKonly)
     {
         ch->printf( "Ты находишься в местности {W{hh%s{x. Недалеко от тебя:\r\n",
-                     ch->in_room->area->name );
+                     ch->in_room->areaInstance->area->name );
         found = false;
 
         for ( d = descriptor_list; d; d = d->next )
@@ -672,7 +672,7 @@ CMDRUNP( where )
                 continue;
             if (victim->is_npc( ))
                 continue;
-            if (!victim->in_room || victim->in_room->area != ch->in_room->area)
+            if (!victim->in_room || victim->in_room->areaInstance != ch->in_room->areaInstance)
                 continue;
             if (IS_SET(victim->in_room->room_flags, ROOM_NOWHERE))
                 continue;
@@ -694,7 +694,7 @@ CMDRUNP( where )
         for ( victim = char_list; victim != 0; victim = victim->next )
         {
             if ( victim->in_room != 0
-                    && victim->in_room->area == ch->in_room->area
+                    && victim->in_room->areaInstance == ch->in_room->areaInstance
                     && ( !victim->is_npc()
                     || ( victim->is_npc() && !IS_SET(victim->act, ACT_NOWHERE) ) )
                     && ch->can_see( victim )
@@ -1489,7 +1489,7 @@ static void do_score_args(Character *ch, const DLString &arg)
     } 
 	if (arg_oneof(arg, "hometown", "дом")) {
         Room *room = get_room_index(pch->getHometown()->getAltar());
-        ch->pecho("Твой дом - %s.", room ? room->area->name : "потерян");
+        ch->pecho("Твой дом - %s.", room ? room->areaInstance->area->name : "потерян");
         return;
     } 
 	if (arg_oneof(arg, "religion", "религия")) {
@@ -1695,7 +1695,7 @@ CMDRUNP( score )
             CLR_FRAME,
 
             CLR_CAPT,
-            room ? room->area->name : "Потерян",
+            room ? room->areaInstance->area->name : "Потерян",
             CLR_BAR,
             msgtable_lookup( msg_positions, ch->position ),
             CLR_FRAME,

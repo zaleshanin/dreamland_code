@@ -76,7 +76,7 @@ void Gangsters::create( const Config& )
         portalRoomVnums.clear( );
         
         for (auto room: roomPrototypes) {
-            if (room->area != area) 
+            if (room->areaInstance->area != area) 
                 continue;
                 
             if (checkRoom( room )) {
@@ -157,7 +157,7 @@ void Gangsters::cleanup( bool performance )
     }
     
     if (!mobRoomVnums.empty( ))
-        REMOVE_BIT(get_room_index( mobRoomVnums.front( ) )->area->area_flag, AREA_NOGATE);
+        REMOVE_BIT(get_room_index( mobRoomVnums.front( ) )->areaInstance->area->area_flag, AREA_NOGATE);
     
     for (ch = char_list; ch; ch = ch_next) {
         ch_next = ch->next;
@@ -482,7 +482,7 @@ Room * Gangsters::findHintRoom( std::ostringstream &buf )
             if (!getActor( ch )->is_npc( ))
                 continue;
 
-            if (ch->getNPC()->pIndexData->area != room->area) 
+            if (ch->getNPC()->pIndexData->area != room->areaInstance->area) 
                 continue;
             
             if (!ch->getRace( )->isPC( ))

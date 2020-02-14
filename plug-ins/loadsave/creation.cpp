@@ -628,13 +628,11 @@ void clone_object(Object *parent, Object *clone)
 
 
 
-Room *create_room_instance(Room *proto, DLString key)
+Room *create_room_instance(Room *proto)
 {
     Room *pRoom;
 
     pRoom = new Room;
-    pRoom->instance = key;
-    pRoom->area = proto->area;
 
     EXTRA_DESCR_DATA *ed, *ed_new;
     for (ed = proto->extra_descr; ed != 0; ed = ed->next) {
@@ -647,12 +645,17 @@ Room *create_room_instance(Room *proto, DLString key)
 
     EXTRA_EXIT_DATA *eexit;
     for (eexit = proto->extra_exit; eexit; eexit = eexit->next) {    
+        if (!eexit->u1.to_room) {
+            warn("create_room_instance %d: no target room on eexit %s", proto->vnum, eexit->keyword);
+            continue;
+        }
+
         EXTRA_EXIT_DATA *peexit = (EXTRA_EXIT_DATA*)alloc_perm(sizeof(EXTRA_EXIT_DATA));
         
         peexit->description = str_dup(eexit->description);
         peexit->exit_info_default = peexit->exit_info = eexit->exit_info_default;
         peexit->key = eexit->key;
-        peexit->u1.vnum = eexit->u1.vnum;
+        peexit->u1.vnum = eexit->u1.to_room->vnum;
         peexit->level = eexit->level;
 
         peexit->short_desc_from = str_dup(eexit->short_desc_from);
@@ -671,6 +674,8 @@ Room *create_room_instance(Room *proto, DLString key)
     }
 
     for (int door = 0; door < DIR_SOMEWHERE; door++) {
+        pRoom->exit[door] = NULL;
+
         EXIT_DATA *exit = proto->exit[door];
         if (!exit)
             continue;
@@ -682,12 +687,13 @@ Room *create_room_instance(Room *proto, DLString key)
         pexit->description = str_dup(exit->description);
         pexit->exit_info_default = pexit->exit_info = exit->exit_info_default;
         pexit->key = exit->key;
-        pexit->u1.vnum = exit->u1.vnum;
+        pexit->u1.vnum = exit->u1.to_room->vnum;
         pexit->level = 0;
         pRoom->exit[door] = pexit;
         pRoom->old_exit[door] = pexit;
     }
 
+    pRoom->vnum = proto->vnum;
     pRoom->name = str_dup(proto->name);
     pRoom->description = str_dup(proto->description);
     pRoom->room_flags = pRoom->room_flags_default = proto->room_flags;
@@ -707,30 +713,24 @@ Room *create_room_instance(Room *proto, DLString key)
 
 bool create_area_instance(AREA_DATA *area, PCMemoryInterface *player)
 {
-    DLString key = player->getName();
+    DLString key = player->getName().toLower();
 
     // Check no instance of given name already exists;
-    if (area->instances.find(key) != area->instances.end())
+    if (area->getInstance(key))
         return false;
 
     // Init new area instance for this player.
-    AreaInstance ai;
-    ai.key = key;
-    ai.area = area;
-    area->instances[key] = ai;
+    AreaInstance *ai = area->createInstance(key);
     
     // Create duplicates of all rooms in this area.
-    for (auto r: area->rooms) {
-        int vnum = r.first;
-        Room *proto = r.second;
-
-        Room *newroom = create_room_instance(proto, key);        
-        roomInstances.push_back(newroom);
-        ai.rooms[vnum] = newroom;
+    AreaInstance *areaProto = area->getDefaultInstance();
+    for (auto r: areaProto->rooms) {
+        Room *newroom = create_room_instance(r.second);   
+        ai->addRoom(newroom);
     }
 
     // Resolve room exits from virtual to real, as during initial area load.
-    for (auto r: ai.rooms) {
+    for (auto r: ai->rooms) {
         Room *room = r.second;
         EXIT_DATA *pexit;
 
@@ -751,7 +751,7 @@ bool create_area_instance(AREA_DATA *area, PCMemoryInterface *player)
         }
     }
 
-    notice("room: created instance of area %s for player %s, %d rooms",
-            area->area_file->file_name, key.c_str(), ai.rooms.size());
+    notice("create_area_instance: reated instance of area %s for player %s, %d rooms",
+            area->area_file->file_name, key.c_str(), ai->rooms.size());
     return true;
 }

@@ -60,7 +60,7 @@ bool InvasionScenario::checkArea( AREA_DATA *area )
 void InvasionSparseScenario::collectRooms( RoomVector& myrooms, int mobCnt )
 {
     for (auto room: roomPrototypes) {
-        if (!checkArea( room->area ))
+        if (!checkArea( room->areaInstance->area ))
             continue;
         
         if (!checkRoom( room ))
@@ -80,13 +80,13 @@ void InvasionDenseScenario::collectRooms( RoomVector& myrooms, int mobCnt )
     int areaCnt;
     
     for (auto room: roomPrototypes) {
-        if (!checkArea( room->area )) 
+        if (!checkArea( room->areaInstance->area )) 
             continue;
             
         if (!checkRoom( room ))
             continue;
         
-        goodRooms[room->area].push_back( room );
+        goodRooms[room->areaInstance->area].push_back( room );
     }
 
     areaCnt = std::max( 3, number_range( mobCnt / 20, mobCnt / 7 ) );

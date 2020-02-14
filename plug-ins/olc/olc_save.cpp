@@ -161,7 +161,7 @@ CMD(asave, 50, "", POS_DEAD, 103, LOG_ALWAYS,
 
     // Save area being edited, if authorized
     if (!str_cmp(arg1, "area")) {
-        pArea = ch->in_room->area;
+        pArea = ch->in_room->areaInstance->area;
 
         if (IS_SET(pArea->area_flag, AREA_SAVELOCK)) {
             ptc(ch, "Area %s was not saved! (Locked from saving)\n\r", ch);

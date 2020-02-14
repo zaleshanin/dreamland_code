@@ -8,6 +8,7 @@
 #include "dl_ctype.h"
 #include "flexer.h"
 #include "grammar_entities_impl.h"
+#include "integer.h"
 
 /*
  * Compare strings, case insensitive.
@@ -147,6 +148,22 @@ int number_argument( char *argument, char *arg )
         strcpy( arg, argument );
 
         return 1;
+}
+
+/*
+ * Given a string like 14.foo, populate args with 14 and 'foo', and return true if a number could be found.
+ */
+bool number_argument( const DLString &cArgs, Integer &number, DLString &argument )
+{
+        argument = "";
+        for (DLString::size_type i = 0; i < cArgs.size(); i++) {
+            if (cArgs.at(i) == '.') {
+                argument = cArgs.substr(i+1);
+                return Integer::tryParse(number, cArgs.substr(0, i));
+            }
+        }
+
+        return false;
 }
 
 /*

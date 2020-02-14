@@ -35,10 +35,10 @@ struct DoorFunc {
         if (IS_WATER(room))
             return false;
 
-        if (IS_SET( room->area->area_flag, AREA_NOQUEST ))
+        if (IS_SET( room->areaInstance->area->area_flag, AREA_NOQUEST ))
             return false;
 
-        if (room->area->low_range > ch->getModifyLevel( ))
+        if (room->areaInstance->area->low_range > ch->getModifyLevel( ))
             return false;
 
         if (!ch->canEnter( room ))

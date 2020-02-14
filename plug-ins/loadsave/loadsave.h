@@ -73,6 +73,7 @@ void        extract_mob_dropped( NPCharacter * );
 bool        mprog_extract( Character *ch, bool count );
 
 int                count_char_room        ( Character *ch, char *argument );
+int count_mob_room(Room *room, int vnum);
 int                count_obj_list        ( obj_index_data *obj, Object *list );
 Character *        get_char_room        ( Character *ch, const DLString &, bool = true );
 Character *        get_char_room        ( Character *ch, char *argument, bool = true );
@@ -108,6 +109,8 @@ Object *        get_obj_room_type( Character *ch, int type );
 Object *        get_obj_room_type( Room *room, int type );
 Object *        get_obj_list_type( Character *ch, int type, Object *list );
 Object *        get_obj_list_type( Character *ch, const DLString &cArg, int type, Object *list );
+Object * get_obj_list_vnum( Object *list, int vnum );
+Object * get_obj_here_vnum( Room *room, int vnum );
 int                count_obj_in_obj( Object *container );
 int                count_obj_in_obj( Object *container, int itype );
 Object *        get_obj_wear_carry( Character *ch, const DLString &cArgument );

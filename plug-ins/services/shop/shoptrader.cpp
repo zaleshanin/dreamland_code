@@ -149,7 +149,7 @@ bool ShopTrader::canServeClient( PCharacter *client )
         return false;
     }
     
-    if (IS_SET(ch->in_room->area->area_flag, AREA_HOMETOWN)
+    if (IS_SET(ch->in_room->areaInstance->area->area_flag, AREA_HOMETOWN)
          && !client->is_npc( ) 
          && IS_SET(client->act, PLR_WANTED))
     {

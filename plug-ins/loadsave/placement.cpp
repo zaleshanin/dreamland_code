@@ -36,10 +36,7 @@ void char_from_room( Character *ch )
                 return;
         }
 
-        if ( !ch->is_npc() )
-        {
-                --ch->in_room->area->nplayer;
-        }
+        ch->in_room->areaInstance->eventCharRemoved(ch);
 
         if ( ch->death_ground_delay > 0 )
         {
@@ -131,15 +128,7 @@ void char_to_room( Character *ch, Room *pRoomIndex )
                 pRoomIndex->people        = ch;
         }
 
-        if ( !ch->is_npc() )
-        {
-                if (ch->in_room->area->empty)
-                {
-                        ch->in_room->area->empty = false;
-                        ch->in_room->area->age = 0;
-                }
-                ++ch->in_room->area->nplayer;
-        }
+        ch->in_room->areaInstance->eventCharPlaced(ch);
 
         ch->in_room->updateLight();
 

@@ -480,17 +480,30 @@ struct        reset_data
     int                arg4;
 };
 
+typedef map<int, int> IndexCounter;
 
 struct AreaInstance {
+    AreaInstance();
+
+    void addRoom(Room *room);
+    bool isPrimary() const;
+    Room * getRoom(int vnum);
+
+    void eventCharPlaced(Character *ch);
+    void eventCharRemoved(Character *ch);
+
     DLString key;
     AREA_DATA *area;
     RoomVnumMap rooms;
     int age;
     int nplayer;
     bool empty;
+    IndexCounter mobs;
+    IndexCounter objs;
 };
 
-typedef map<DLString, AreaInstance> AreaInstanceMap;
+typedef map<DLString, AreaInstance *> AreaInstanceMap;
+typedef vector<AreaInstance *> AreaInstanceVector;
 
 /*
  * Area definition.
@@ -498,7 +511,14 @@ typedef map<DLString, AreaInstance> AreaInstanceMap;
 struct        area_data
 {
     area_data( );
-    
+
+    void addRoomInstance(Room *room, const DLString &key);
+    void addRoomProto(Room *room);
+    AreaInstance * getDefaultInstance();
+    AreaInstance * getOrCreateInstance(const DLString &key);
+    AreaInstance * getInstance(const DLString &key);
+    AreaInstance * createInstance(const DLString &key);
+
     AREA_DATA *                next;
     char *                name;
     char *                altname;
@@ -520,12 +540,9 @@ struct        area_data
     /*OLC*/
     int                        security;
     int                        vnum;
-    AreaInstanceMap instances;
-
-    void addRoomInstance(Room *room, const DLString &key);
-    void addRoomProto(Room *room);
-    AreaInstance & getDefaultInstance();
-    static const DLString DEFAULT_INSTANCE_NAME;
+    
+    AreaInstanceMap instanceMap;    
+    AreaInstanceVector instances;
 };
 
 /*

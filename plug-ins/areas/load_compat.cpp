@@ -111,7 +111,7 @@ vnumck()
                 "%s: min vnum is higher then max.", aname);
         
         for (auto room: roomPrototypes) {
-            if(room->area != *i)
+            if(room->areaInstance->area != *i)
                 continue;
             
             if(room->vnum < l || room->vnum > h)
@@ -267,9 +267,6 @@ void new_load_area( FILE *fp )
     AREA_DATA *pArea;
     
     pArea                = new AREA_DATA;
-    pArea->age                = 15;
-    pArea->nplayer        = 0;
-    pArea->empty        = false;
     pArea->count        = 0;
     pArea->resetmsg        = 0;
     pArea->area_flag        = 0;
@@ -621,7 +618,6 @@ void load_rooms( FILE *fp )
         pRoomIndex->people        = 0;
         pRoomIndex->contents        = 0;
         pRoomIndex->extra_descr        = 0;
-        pRoomIndex->area        = area_last;
         pRoomIndex->vnum        = vnum;
         pRoomIndex->name        = fread_string( fp );
         pRoomIndex->description        = fread_string( fp );
@@ -798,10 +794,7 @@ void load_rooms( FILE *fp )
         if (IS_WATER(pRoomIndex) && pRoomIndex->liquid == liq_none)
             pRoomIndex->liquid = liq_water;
 
-        pRoomIndex->area->rooms[vnum] = pRoomIndex;
-        roomPrototypeMap[vnum] = pRoomIndex;
-        roomPrototypes.push_back(pRoomIndex);
-        roomInstances.push_back(pRoomIndex);
+        area_last->addRoomProto(pRoomIndex);
 
         if (FeniaManager::wrapperManager)
             FeniaManager::wrapperManager->linkWrapper( pRoomIndex );
@@ -1071,7 +1064,7 @@ static int get_obj_reset_level( AREA_DATA *pArea, int keyVnum )
                         if (in->item_type == ITEM_CONTAINER
                             && IS_SET(in->value[1], CONT_LOCKED))
                         {
-                            level = min( get_obj_reset_level( room->area, in->value[2] ), 
+                            level = min( get_obj_reset_level( room->areaInstance->area, in->value[2] ), 
                                          level );
                         }
                         else
@@ -1098,7 +1091,7 @@ void fix_door_levels( bool verbose )
             if (IS_SET(ex->exit_info_default, EX_NOPASS))
                 continue;
             
-            ex->level = get_obj_reset_level( r->area, ex->key );
+            ex->level = get_obj_reset_level( r->areaInstance->area, ex->key );
             
             if (verbose)
                 LogStream::sendNotice( )
@@ -1112,7 +1105,7 @@ void fix_door_levels( bool verbose )
             if (IS_SET(ex->exit_info_default, EX_NOPASS))
                 continue;
             
-            ex->level = get_obj_reset_level( r->area, ex->key );
+            ex->level = get_obj_reset_level( r->areaInstance->area, ex->key );
 
             if (verbose)
                 LogStream::sendNotice( )

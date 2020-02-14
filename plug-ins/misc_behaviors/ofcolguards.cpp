@@ -24,7 +24,7 @@ void OfcolMarshal::fight( Character *victim )
     
     BasicMobileDestiny::fight( victim );
 
-    if (ch->in_room->area != ch->zone) 
+    if (ch->in_room->areaInstance != ch->zone) 
         return;
 
     if (number_percent() < 25) 
@@ -44,7 +44,7 @@ void OfcolMarshal::fight( Character *victim )
 
         if (!ach->in_room
             || ach == ch
-            || ach->in_room->area != ch->in_room->area
+            || ach->in_room->areaInstance != ch->in_room->areaInstance
             || !ach->is_npc( ))
             continue;
         
@@ -102,7 +102,7 @@ void OfcolGuard::fight( Character *victim )
 
     BasicMobileDestiny::fight( victim );
 
-    if (ch->in_room->area != ch->zone) 
+    if (ch->in_room->areaInstance != ch->zone) 
         return;
 
     if (number_percent( ) < 25) 
@@ -120,7 +120,7 @@ void OfcolGuard::fight( Character *victim )
 
         if (!ach->in_room
             || ach == ch
-            || ach->in_room->area != ch->in_room->area
+            || ach->in_room->areaInstance != ch->in_room->areaInstance
             || !ach->is_npc( ))
             continue;
         

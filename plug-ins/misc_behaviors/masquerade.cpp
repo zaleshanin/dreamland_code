@@ -120,7 +120,7 @@ bool RoamingPortal::area( )
 
     count = 0;
 
-    for (auto i: area->rooms) {
+    for (auto i: area->getDefaultInstance()->rooms) {
         if (number_range( 0, count++ ) == 0) 
             room = i.second;
     }
