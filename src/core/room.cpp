@@ -20,24 +20,33 @@
 CLAN(none);
 PROF(none);
 
+RoomIndexData::RoomIndexData()
+        : reset_first( 0 ), reset_last( 0 ),
+          extra_descr(0), extra_exit(0),
+          name( 0 ), description( 0 ), vnum(0), room_flags(0),
+          sector_type(0), heal_rate(0), mana_rate(0),
+          clan( clan_none ),  guilds( professionManager ),
+          liquid( "none" ), area(0)
+
+{
+    for (int i = 0; i < DIR_SOMEWHERE; i++) 
+        exit[i] = 0;
+}
+
 Room::Room( ) : 
-                reset_first( 0 ), reset_last( 0 ),
                 people( 0 ), contents( 0 ), extra_descr( 0 ),
                 extra_exit( 0 ),
                 name( 0 ), description( 0 ), owner( 0 ),
-                vnum( 0 ), room_flags( 0 ), room_flags_default( 0 ),
+                vnum( 0 ), room_flags( 0 ),
                 light( 0 ), sector_type( 0 ),
-                heal_rate( 0 ), heal_rate_default( 0 ),
-                mana_rate( 0 ), mana_rate_default( 0 ),
-                clan( clan_none ),  
-                guilds( professionManager ),
+                heal_rate( 0 ),
+                mana_rate( 0 ),
                 affected( 0 ), affected_by( 0 ),
-                liquid( "none" ),
                 behavior( RoomBehavior::NODE_NAME ),
                 areaInstance( 0 ), pIndexData(0)
 {
     for (int i = 0; i < DIR_SOMEWHERE; i++) 
-        exit[i] = old_exit[i] = 0;
+        exit[i] = 0;
 }
 
 bool Room::isOwner( Character *ch ) const
@@ -86,10 +95,10 @@ bool Room::isCommon( )
     if (IS_SET(areaInstance->area->area_flag, AREA_WIZLOCK))
         return false;
 
-    if (clan != clan_none)
+    if (pIndexData->clan != clan_none)
         return false;
     
-    if (!guilds.empty( ))
+    if (!pIndexData->guilds.empty( ))
         return false;
     
     if (behavior && !behavior->isCommon( ))
@@ -120,12 +129,3 @@ bool Room::isDark( ) const
     return true;
 }
 
-bool Room::isInstance() const
-{
-    return pIndexData != 0;
-}
-
-Room * Room::getProto()
-{
-    return pIndexData ? pIndexData : this;
-}

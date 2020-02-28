@@ -6,6 +6,7 @@
 #define DL_STRINGS_H
 
 class DLString;
+class Integer;
 
 int     str_cmp( const char *astr, const char *bstr );
 int     strn_cmp(const char *arg1, const char *arg2, int n);

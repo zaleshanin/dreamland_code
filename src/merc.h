@@ -62,6 +62,9 @@
 #endif
 
 #include <string>
+#include <list>
+#include <map>
+#include <set>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -70,13 +73,17 @@
 #include "pointer.h"
 #include "xmlstreamable.h"
 #include "globalbitvector.h"
-
 #include "fenia/register-decl.h"
 #include "grammar_entities.h"
 #include "areabehavior.h"
 #include "mobilespecial.h"
 #include "helpmanager.h"
 #include "autoflags.h"
+#include "config_io.h"
+#include "dl_ctype.h"
+#include "dl_math.h"
+#include "dl_strings.h"
+#include "logstream.h"
 
 class NPCharacter;
 class Character;
@@ -85,9 +92,28 @@ class Affect;
 class Room;
 class XMLDocument;
 class AreaBehavior;
+struct RoomIndexData;
+struct mob_index_data;
+struct obj_index_data;
+struct extra_descr_data;
+struct area_data;
+
+
 typedef ::Pointer<XMLDocument> XMLDocumentPointer;
 typedef map<DLString, DLString> Properties;
 typedef map<int, Room *> RoomVnumMap;
+typedef map<int, int> IndexCounter;
+typedef map<DLString, AreaInstance *> AreaInstanceMap;
+typedef vector<AreaInstance *> AreaInstanceVector;
+typedef vector<RoomIndexData *> RoomIndexVector;
+typedef vector<Room *> RoomVector;
+typedef list<Room *> RoomList;
+typedef set<Room *> RoomSet;
+typedef map<int, Room *> RoomVnumMap;
+typedef map<int, RoomIndexData *> RoomIndexMap;
+
+
+
 
 
 /* RT ASCII conversions -- used so we can have letters in this file */
@@ -192,9 +218,6 @@ typedef struct  auction_data            AUCTION_DATA;
 /*---------------------------------------------------------------------------*/
 
 
-
-#undef ANATOLIA_MACHINE
-
 #define PULSE_MOBILE                  (dreamland->getPulseMobile( ))
 #define PULSE_TICK                  (dreamland->getPulseTick( ))
 
@@ -278,16 +301,6 @@ struct        kill_data
 #define DIR_UP                              4
 #define DIR_DOWN                      5
 #define DIR_SOMEWHERE                        6
-
-
-
-
-/***************************************************************************
- *                                                                         *
- *                   VALUES OF INTEREST TO AREA BUILDERS                   *
- *                   (End of this section ... stop here)                   *
- *                                                                         *
- ***************************************************************************/
 
 /*
  * auction data
@@ -480,8 +493,6 @@ struct        reset_data
     int                arg4;
 };
 
-typedef map<int, int> IndexCounter;
-
 struct AreaInstance {
     AreaInstance();
 
@@ -502,9 +513,6 @@ struct AreaInstance {
     IndexCounter objs;
 };
 
-typedef map<DLString, AreaInstance *> AreaInstanceMap;
-typedef vector<AreaInstance *> AreaInstanceVector;
-
 /*
  * Area definition.
  */
@@ -513,7 +521,7 @@ struct        area_data
     area_data( );
 
     void addRoomInstance(Room *room, const DLString &key);
-    void addRoomProto(Room *room);
+    void addRoomProto(RoomIndexData *pRoom);
     AreaInstance * getDefaultInstance();
     AreaInstance * getOrCreateInstance(const DLString &key);
     AreaInstance * getInstance(const DLString &key);
@@ -543,6 +551,7 @@ struct        area_data
     
     AreaInstanceMap instanceMap;    
     AreaInstanceVector instances;
+    RoomIndexVector roomProtos;
 };
 
 /*
@@ -603,6 +612,82 @@ extern                int                        top_vnum_mob;
 extern                int                        top_vnum_obj;
 extern                int                        top_obj_index;
 extern                int                        top_mob_index;
+
+
+#define        MAX_KEY_HASH                 1024
+
+extern char str_empty[1];
+
+/* vals from db.c */
+extern bool fBootDb;
+extern int mobile_count;
+extern int                newmobs;
+extern int                newobjs;
+extern mob_index_data         * mob_index_hash          [MAX_KEY_HASH];
+extern obj_index_data         * obj_index_hash          [MAX_KEY_HASH];
+extern area_data         * area_first;
+
+/** List of all room prototypes, kept in area files and edited in OLC. */
+extern RoomIndexVector roomPrototypes;
+
+/** Map of all room prototypes by vnum, for quick access. */
+extern RoomIndexMap roomPrototypeMap;
+
+/** List of all room instances. */
+extern RoomVector roomInstances;
+
+/** A small collection of rooms with affects on them, to avoid going through the whole list in updates. */
+extern RoomSet roomAffected;
+
+extern int        top_affect;
+extern int        top_area;
+extern int        top_ed;
+extern int        top_exit;
+extern int        top_mob_index;
+extern int        top_obj_index;
+extern int        top_reset;
+
+// MOC_SKIP_BEGIN
+struct area_file {
+    struct area_file *next;
+    struct area_data *area;
+    char *file_name;
+};
+
+extern struct area_file * area_file_list;
+struct area_file * new_area_file(const char *name);
+// MOC_SKIP_END
+
+/*
+ * Memory management.
+ * Increase MAX_STRING if you have too.        
+ * Tune the others only if you understand what you're doing.
+ */
+#define                        MAX_STRING        10000000
+#define                        MAX_PERM_BLOCK        131072
+#define                        MAX_MEM_LIST        11
+extern int        nAllocString;
+extern int        sAllocString;
+extern int        nAllocPerm;
+extern int        sAllocPerm;
+
+/* Magic number for memory allocation */
+#define MAGIC_NUM 52571214
+
+void * alloc_perm(int);
+void * alloc_mem(int);
+void free_mem(void *, int);
+
+mob_index_data *        get_mob_index        ( int vnum );
+obj_index_data *        get_obj_index        ( int vnum );
+Room *        get_room_index        ( int vnum );
+
+char *        get_extra_descr        ( const char *name, extra_descr_data *ed );
+extra_descr_data *new_extra_descr( );
+void free_extra_descr( extra_descr_data * );
+
+char *        str_dup                ( const char *str );
+void        free_string        ( char *pstr );
 
 
 

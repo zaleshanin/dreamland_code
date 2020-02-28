@@ -84,7 +84,6 @@
 
 #include "dreamland.h"
 #include "merc.h"
-#include "mercdb.h"
 #include "def.h"
 
 using namespace std;
@@ -101,8 +100,8 @@ WEATHER_DATA                weather_info;
 
 AUCTION_DATA        *        auction = new auction_data( );
 
-RoomVector roomPrototypes;
-RoomVnumMap roomPrototypeMap;
+RoomIndexVector roomPrototypes;
+RoomIndexMap roomPrototypeMap;
 RoomVector roomInstances;
 RoomSet roomAffected;
 
@@ -176,19 +175,8 @@ AreaInstance::AreaInstance()
 void AreaInstance::addRoom(Room *room)
 {
     room->areaInstance = this;
-    rooms[room->vnum] = room;    
+    this->rooms[room->vnum] = room;
     roomInstances.push_back(room);
-
-    if (isPrimary()) {
-        // For prototype rooms (i.e. those on a primary area instance), remember their details for quick access.
-        roomPrototypeMap[room->vnum] = room;
-        roomPrototypes.push_back(room);
-    } else {
-        // For instance rooms, remember a link to their prototype.
-        room->pIndexData = get_room_index(room->vnum);
-        if (!room->pIndexData)
-            bug("AreaInstance::addRoom no proto found for %d %s in %s", room->vnum, key.c_str(), area->area_file->file_name);
-    }   
 }
 
 Room * AreaInstance::getRoom(int vnum)
@@ -203,20 +191,6 @@ Room * AreaInstance::getRoom(int vnum)
 bool AreaInstance::isPrimary() const
 {
     return area->instances.front() == this;
-}
-
-area_data::area_data( ) : behavior( AreaBehavior::NODE_NAME )
-{
-}
-
-void area_data::addRoomInstance(Room *room, const DLString &key)
-{
-    getOrCreateInstance(key)->addRoom(room);
-}
-
-void area_data::addRoomProto(Room *pRoom)
-{
-    getDefaultInstance()->addRoom(pRoom);
 }
 
 void AreaInstance::eventCharPlaced(Character *ch)
@@ -243,6 +217,22 @@ void AreaInstance::eventCharRemoved(Character *ch)
 }
 
 const DLString DEFAULT_INSTANCE = "";
+
+area_data::area_data( ) : behavior( AreaBehavior::NODE_NAME )
+{
+}
+
+void area_data::addRoomInstance(Room *room, const DLString &key)
+{
+    getOrCreateInstance(key)->addRoom(room);
+}
+
+void area_data::addRoomProto(RoomIndexData *pRoom)
+{
+    this->roomProtos.push_back(pRoom);
+    roomPrototypes.push_back(pRoom);
+    roomPrototypeMap[pRoom->vnum] = pRoom;
+}
 
 AreaInstance * area_data::getDefaultInstance()
 {

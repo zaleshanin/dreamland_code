@@ -48,6 +48,34 @@ struct RoomHistory : public list<RoomHistoryEntry> {
     static const unsigned int MAX_SIZE;
 };
 
+struct RoomIndexData : public virtual DLObject, public WrapperTarget {
+    RoomIndexData();
+    
+    reset_data *reset_first;
+    reset_data *reset_last;
+    extra_descr_data *        extra_descr;
+    exit_data *        exit        [6];
+    extra_exit_data * extra_exit;
+
+    char *        name;
+    char *        description;
+    int         vnum;
+    int         room_flags;
+    int         sector_type;
+    int         heal_rate;
+    int         mana_rate;
+    ClanReference clan;
+    GlobalBitvector guilds;
+    LiquidReference liquid;
+    Properties properties;
+    XMLDocumentPointer behavior;
+
+    Scripting::Register init;
+
+    AREA_DATA *area;
+    RoomVector instances;
+};
+
 class Room : public virtual DLObject, public WrapperTarget {
 public:
     Room( );
@@ -74,50 +102,32 @@ public:
     void echo( int, const char *, ... ) const;
     void echoAround( int, const char *, ... ) const;
 
-    /** Returns true if this is a player-specific instance and not a prototype. */
-    bool isInstance() const;
-
-    /** Return original room prototype or self. */
-    Room *getProto();
-
 public:
-    reset_data *reset_first;
-    reset_data *reset_last;
     Character *        people;
     Object *        contents;
     extra_descr_data *        extra_descr;
-
     exit_data *        exit        [6];
-    exit_data *        old_exit[6];
     extra_exit_data * extra_exit;
+
     char *        name;
     char *        description;
     char *        owner;
     int                vnum;
     int        room_flags;
-    int        room_flags_default;
     int                light;
     int                sector_type;
     int                heal_rate;
-    int                heal_rate_default;
     int         mana_rate;
-    int         mana_rate_default;
-    ClanReference clan;
-    GlobalBitvector guilds;
     RoomHistory history;
     Affect        *affected;
     int        affected_by;
-    LiquidReference liquid;
-    Properties properties;
 
     XMLPersistentStreamable<RoomBehavior> behavior;
     Scripting::Register init;
 
-    /** Area instance this room belongs to; always a default instance for room prototypes. */
     AreaInstance *areaInstance;
 
-    /** Room prototype or null, mainly for macro consistency between room/obj/mob. */
-    Room *pIndexData;
+    RoomIndexData *pIndexData;
 };
 
 
