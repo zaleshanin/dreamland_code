@@ -13,7 +13,7 @@
 #include "clanreference.h"
 #include "interp.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "def.h"
 
 #define KS KidnapUrchinScenario
@@ -31,7 +31,7 @@ bool KS::applicable( PCharacter *hero ) const
 void KS::msgRemoteReunion( NPCharacter *kid, NPCharacter *king, PCharacter *hero ) const 
 {
     oldact("$c1 хмуро смотрит на $C4.", kid, 0, king, TO_ROOM);
-    hero->printf( "%s и %s уже встретились.\r\n", king->getNameP( '1' ).c_str( ), kid->getNameP( '1' ).c_str( ) );
+    hero->pecho( "%s и %s уже встретились.", king->getNameP( '1' ).c_str( ), kid->getNameP( '1' ).c_str( ) );
     oldact("Приди к $C3 за благодарностью!", hero, 0, king, TO_CHAR);
 }
 void KS::msgKingDeath( NPCharacter *king, Character *killer, PCharacter *hero ) const 
@@ -98,20 +98,20 @@ void KS::actLegend( NPCharacter *king, PCharacter *hero, KidnapQuest::Pointer qu
 }
 void KS::actGiveMark( NPCharacter *king, PCharacter *hero, Object * mark, int time ) const 
 {
-    char buf[MAX_STRING_LENGTH];
-    
+    DLString msg;
 
     oldact("$c1 говорит тебе '{GЯ продала все, что у меня было, чтобы купить этот белый билет...{x'", king, 0, hero, TO_VICT);
     oldact("$c1 вручает тебе $o4.", king, mark, hero, TO_VICT);
     oldact("$c1 вручает $C3 $o4.", king, mark, hero, TO_NOTVICT);
     oldact("$c1 говорит тебе '{GПередай его ему и поскорей!{x'", king, 0, hero, TO_VICT);
-    sprintf( buf, "$c1 говорит тебе '{GМатеринское сердце подсказывает мне, "
+    msg = fmt(0, "$c1 говорит тебе '{GМатеринское сердце подсказывает мне, "
                   "что, если ты не приведешь его ко мне через {Y%d{G минут%s, "
                   "с ним случится что-то непоправимое.{x'",
              time, GET_COUNT(time, "у", "ы", "") );
 
-    oldact(buf, king, 0, hero, TO_VICT);
+    oldact(msg.c_str(), king, 0, hero, TO_VICT);
 }
+
 void KS::actMarkLost( NPCharacter *king, PCharacter *hero, Object * mark ) const 
 {
     oldact("$c1 говорит тебе '{GЧто ты надела$Gло|л|ла?!{x'", king, 0, hero, TO_VICT);

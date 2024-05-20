@@ -7,11 +7,10 @@
 #define CORDER_H
 
 #include "commandplugin.h"
-#include "defaultcommand.h"
 
 class InterpretArguments;
 
-class COrder : public CommandPlugin, public DefaultCommand {
+class COrder : public CommandPlugin {
 XML_OBJECT
 public:
         typedef ::Pointer<COrder> Pointer;

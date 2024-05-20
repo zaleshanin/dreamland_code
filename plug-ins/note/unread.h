@@ -7,12 +7,11 @@
 #define UNREAD_H
 
 #include "commandplugin.h"
-#include "defaultcommand.h"
 #include "descriptorstatelistener.h"
 
 class PCharacter;
 
-class Unread : public CommandPlugin, public DefaultCommand {
+class Unread : public CommandPlugin {
 XML_OBJECT
 public:
         typedef ::Pointer<Unread> Pointer;

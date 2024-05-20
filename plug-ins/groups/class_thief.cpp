@@ -40,7 +40,7 @@
 #include "chance.h"
 #include "exitsmovement.h"
 #include "act_lock.h"
-#include "mercdb.h"
+
 #include "save.h"
 
 #include "magic.h"
@@ -646,9 +646,9 @@ SKILL_RUNP( forge )
 
         dup = create_object( key->pIndexData, 0 );
         dup->gram_gender = Grammar::MultiGender::MASCULINE;
-        dup->fmtName( DUP_NAMES, key->getName( ) );
-        dup->fmtShortDescr( DUP_SHORT, key->getShortDescr( '2' ).c_str( ) );
-        dup->fmtDescription( DUP_LONG, key->getShortDescr( '2' ).c_str( ) );
+        dup->setName( fmt(0, DUP_NAMES, key->getName( )).c_str() );
+        dup->setShortDescr( fmt(0, DUP_SHORT, key->getShortDescr( '2' ).c_str( ) ));
+        dup->setDescription( fmt(0, DUP_LONG, key->getShortDescr( '2' ).c_str( ) ));
         dup->setMaterial( blank->getMaterial( ) );
         dup->wear_flags  = blank->wear_flags;
         dup->extra_flags = blank->extra_flags;

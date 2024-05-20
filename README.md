@@ -92,12 +92,11 @@ make -j 4 && make install
 ```
 
 ### <a name="areas">Установка dreamland_world</a>
-Склонируйте репозиторий dreamland_world, который содержит все конфигурационные файлы и некоторые зоны. 
-Создайте на него ссылку из каталога runtime.
+Склонируйте репозиторий `dreamland_world`, который содержит все конфигурационные файлы и некоторые зоны, а также репу `dreamland_fenia_public` с полезными скриптами на фене. 
 ```bash
-cd /home/dreamland
-git clone https://github.com/dreamland-mud/dreamland_world.git
-ln -s /home/dreamland/dreamland_world /home/dreamland/runtime/share/DL
+cd /home/dreamland/runtime
+git clone https://github.com/dreamland-mud/dreamland_world.git share/DL
+git clone https://github.com/dreamland-mud/dreamland_fenia_public.git share/DL/fenia/public
 ```
 
 Вот и всё, мир готов к запуску.

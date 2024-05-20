@@ -14,7 +14,6 @@
  *    и все остальные, кто советовал и играл в этот MUD                    *
  ***************************************************************************/
 
-#include "objthrow.h"
 #include "skill.h"
 #include "skillcommandtemplate.h"
 #include "skillmanager.h"
@@ -26,7 +25,7 @@
 #include "object.h"
 
 #include "act_move.h"
-#include "mercdb.h"
+
 
 #include "magic.h"
 #include "skill_utils.h"
@@ -38,7 +37,7 @@
 #include "charutils.h"
 #include "stats_apply.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "handler.h"
 #include "act.h"
 #include "interp.h"
@@ -684,114 +683,5 @@ SKILL_RUNP( lash )
         yell_panic( ch, victim,
                     "Помогите! Кто-то пытается огреть меня хлыстом!",
                     "Помогите! %1$^C1 бичует меня!" );
-}
-
-/*
- * 'throw spear' skill command
- */
-
-SKILL_RUNP( throwspear )
-{
-        Character *victim;
-        Object *spear;
-        bool success;
-        int chance,direction;
-        int range = ( ch->getModifyLevel() / 10) + 1;
-        DLString argDoor, argVict;
-        ostringstream errbuf;
-
-        if ( ch->is_npc() )
-                return; /* Mobs can't shoot spears */
-
-        if ( ch->fighting )
-        {
-                ch->pecho("Ты не можешь сконцентрироваться для метания копья.");
-                return;
-        }
-
-        if (!direction_range_argument(argument, argDoor, argVict, direction)) {
-                ch->pecho("Метнуть копье куда и в кого?");
-                return;
-        }
-
-        if ( ( victim = find_char( ch, argVict.c_str(), direction, &range, errbuf ) ) == 0 ) {
-            ch->pecho(errbuf.str());
-            return;
-        }
-
-        if ( !victim->is_npc() && victim->desc == 0 )
-        {
-                ch->pecho("Ты не можешь сделать этого.");
-                return;
-        }
-
-        if ( victim == ch )
-        {
-                ch->pecho("Это бессмысленно.");
-                return;
-        }
-
-        if ( is_safe_nomessage(ch,victim) )
-        {
-                ch->pecho("Боги покровительствуют %C3.", victim);
-                return;
-        }
-
-        if ( ch->in_room == victim->in_room )
-        {
-                ch->pecho("Ты не можешь метнуть копье в упор.");
-                return;
-        }
-
-        spear = get_eq_char(ch, wear_wield);
-
-        if ( !spear
-                || spear->item_type != ITEM_WEAPON
-                || spear->value0() != WEAPON_SPEAR )
-        {
-                ch->pecho("Для метания тебе необходимо копье!");
-                return;            
-        }
-
-    // This limitation seems pretty arbitrary, spears can be thrown with shield/dual. Commenting for now.
-    /*
-        if ( get_eq_char(ch,wear_second_wield) || get_eq_char(ch,wear_shield) )
-        {
-                ch->pecho("Твоя вторая рука дожна быть свободна!");
-                return;            
-        } */
-
-
-        chance = gsn_spear->getEffective( ch );
-
-        if ( victim->position == POS_SLEEPING )
-                chance += 40;
-        if ( victim->position == POS_RESTING )
-                chance += 10;
-        if ( victim->position == POS_FIGHTING )
-                chance -= 40;
-
-        chance += ch->hitroll - ch->getRealLevel();
-
-        oldact( "Ты метаешь $o4 $T.", ch, spear, dirs[ direction ].leave, TO_CHAR  );
-        oldact( "$c1 метает $o4 $T.", ch, spear, dirs[ direction ].leave, TO_ROOM );
-
-        set_violent( ch, victim, false );
-
-        obj_from_char(spear);
-        int dam;
-        
-        dam = dice(spear->value1(),spear->value2());
-        dam += ch->damroll + get_str_app(ch).missile;
-        dam /= 2;
-
-        try {
-            success = send_arrow(ch,victim,spear,direction,chance,dam);
-        } catch (const VictimDeathException &) {
-            victim = NULL;
-            success = true;
-        }
-
-        gsn_spear->improve( ch, success, victim );
 }
 

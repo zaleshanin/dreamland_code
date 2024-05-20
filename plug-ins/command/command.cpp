@@ -3,12 +3,13 @@
  * ruffina, 2004
  * logic based on interpret() from DreamLand 2.0
  */
-
+#include <string.h>
 #include "command.h"
 #include "commandhelp.h"
 #include "commandmanager.h"
 #include "commandflags.h"
 
+#include "dl_ctype.h"
 #include "pcharacter.h"
 #include "npcharacter.h"
 #include "helpmanager.h"
@@ -26,12 +27,11 @@ GSN(manacles);
 /*--------------------------------------------------------------------------
  * Command
  *-------------------------------------------------------------------------*/
-const Flags Command::defaultOrder( 0, &order_flags );
-const Flags Command::defaultExtra( 0, &command_flags );
-const Enumeration Command::defaultPosition( POS_DEAD, &position_table );
-const Flags Command::defaultCategory( 0, &command_category_flags );
-
 Command::Command( ) 
+    : extra(0, &command_flags), 
+      position(POS_DEAD, &position_table),
+      order(0, &order_flags),
+      cat(CMD_CAT_MISC, &command_category_flags)
 {
 }
 
@@ -40,9 +40,60 @@ Command::~Command( )
     
 }
 
-CommandHelp::Pointer Command::getHelp( ) const
+const DLString& Command::getName( ) const
 {
-    return CommandHelp::Pointer( );
+    return name.getValue( );
+}
+const Flags & Command::getExtra( ) const
+{
+    return extra;
+}
+short Command::getLevel( ) const
+{
+    return level.getValue( );
+}
+short Command::getLog( ) const
+{
+    return log.getValue( );
+}
+const Enumeration & Command::getPosition( ) const
+{
+    return position;
+}
+const Flags & Command::getCommandCategory( ) const
+{
+    return cat;
+}
+const Flags & Command::getOrder( ) const
+{
+    return order;
+}
+const DLString& Command::getHint( ) const
+{
+    return hint.getValue( );
+}
+
+::Pointer<CommandHelp> Command::getHelp( ) const
+{
+    return help;
+}
+
+const DLString & Command::getRussianName( ) const
+{
+    if (russian.empty( ))
+        return DLString::emptyString;
+    else 
+        return russian.front( );
+}
+
+const XMLStringList & Command::getAliases( ) const
+{
+    return aliases;
+}
+
+const XMLStringList & Command::getRussianAliases( ) const
+{
+    return russian;
 }
 
 bool Command::available( Character *ch ) const 
@@ -67,44 +118,23 @@ bool Command::visible( Character *ch ) const
     return true;
 }
 
-const DLString & Command::getRussianName( ) const
-{
-    return DLString::emptyString;
-}
-
-short Command::getLog( ) const
-{
-    return LOG_NORMAL;
-}
-
-const Flags & Command::getExtra( ) const
-{
-    return defaultExtra;
-}
-
-short Command::getLevel( ) const
-{
-    return 0;
-}
-
-const Enumeration & Command::getPosition( ) const
-{
-    return defaultPosition;
-}
-
-const Flags & Command::getOrder( ) const
-{
-    return defaultOrder;
-}
-
-const Flags & Command::getCommandCategory( ) const
-{
-    return defaultCategory;
-}
 
 bool Command::matchesExactly( const DLString &cmdName ) const
 {
-    return getName( ) == cmdName || getRussianName( ) == cmdName;
+    if (getName( ) == cmdName || getRussianName( ) == cmdName)
+        return true;
+
+    if (dl_isrusalpha( cmdName.at( 0 ) )) {
+        for (XMLStringList::const_iterator i = russian.begin( ); i != russian.end( ); i++) 
+            if (*i == cmdName) 
+                return true;
+    } else {
+        for (XMLStringList::const_iterator i = aliases.begin( ); i != aliases.end( ); i++) 
+            if (*i == cmdName) 
+                return true;
+    }
+
+    return false;
 }
 
 bool Command::matches( const DLString& command ) const
@@ -123,6 +153,20 @@ bool Command::matches( const DLString& command ) const
 
 bool Command::matchesAlias( const DLString& command ) const
 {
+    if (command.empty( ))
+        return false;
+    
+    if (dl_isrusalpha( command.at( 0 ) )) {
+        for (XMLStringList::const_iterator r = russian.begin( ); r != russian.end( ); r++) 
+            if (command.strPrefix( *r )) 
+                return true;
+    }
+    else {
+        for (XMLStringList::const_iterator a = aliases.begin( ); a != aliases.end( ); a++) 
+            if (command.strPrefix( *a )) 
+                return true;
+    }
+
     return false;
 }
 
@@ -173,7 +217,7 @@ int Command::dispatchOrder( const InterpretArguments &iargs )
     }
 
     if (getExtra( ).isSet( CMD_SPELLOUT ) && !matchesExactly( iargs.cmdName.toLower( ) )) {
-        ch->printf("Команду '%s' необходимо ввести полностью.\n\r", getName( ).c_str( ) );
+        ch->pecho("Команду '%s' необходимо ввести полностью.", getName( ).c_str( ) );
         return RC_DISPATCH_SPELLOUT;
     }
                     
@@ -279,36 +323,20 @@ bool Command::checkPosition( Character *ch )
     return false;
 }
 
-static const XMLStringList emptyList;
-
-const XMLStringList &Command::getAliases( ) const
+void Command::entryPoint( Character *ch, const DLString &constArgs )
 {
-    return emptyList;
+    run(ch, constArgs);
 }
 
-const XMLStringList &Command::getRussianAliases( ) const
+void Command::run( Character * ch, const DLString & constArguments ) 
 {
-    return emptyList;
+    char argument[MAX_STRING_LENGTH];
+
+    strcpy( argument, constArguments.c_str( ) );
+    run( ch, argument );
 }
 
-const DLString & Command::getHint( ) const
-{
-    return DLString::emptyString;
-}
-
-/*--------------------------------------------------------------------------
- * XMLCommand
- *-------------------------------------------------------------------------*/
-XMLCommand::XMLCommand( ) 
-{
-}
-
-XMLCommand::~XMLCommand( ) 
-{
-}
-
-CommandLoader * XMLCommand::getLoader( ) const 
-{
-    return commandManager;
+void Command::run( Character *, char * ) 
+{ 
 }
 

@@ -3,6 +3,7 @@
  * ruffina, 2004
  */
 #include <list>
+#include <string.h>
 #include "loadsave.h"
 #include "save.h"
 
@@ -18,7 +19,6 @@
 #include "descriptor.h"
 #include "act.h"
 #include "merc.h"
-#include "mercdb.h"
 #include "def.h"
 
 WEARLOC(none);
@@ -900,7 +900,7 @@ bool text_match_with_highlight(const DLString &text, const DLString &args, ostri
         num++;
         if (line.find(args) != string::npos) {
             line.replaces(args, highlight + args + "{w");
-            matchBuf << dlprintf("{D%3d{x ", num) << line << "\r\n";
+            matchBuf << fmt(0, "{D%3d{x ", num) << line << "\r\n";
             found = true;
         }
     }

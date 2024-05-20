@@ -4,20 +4,23 @@
  */
 #include <pcharacter.h>
 #include <object.h>
-#include "room.h"
+#include <string.h>
 
+#include "room.h"
 #include "aedit.h"
 #include "hedit.h"
 #include "security.h"
 #include "olc.h"
 #include "areahelp.h"
+#include "qedit.h"
 
 #include "websocketrpc.h"
 #include "merc.h"
 #include "arg_utils.h"
 #include "update_areas.h"
 #include "interp.h"
-#include "mercdb.h"
+#include "act.h"
+
 #include "def.h"
 
 OLC_STATE(OLCStateArea);
@@ -209,12 +212,141 @@ AEDIT(show, "показать", "показать все поля")
             ch->pecho("Helps:\r\n" + buf);
         else
             ch->pecho("Helps:      (none) ({y{hchelp create{hx {Dto add area help{w)");
+
     } else {
         ptc(ch, "Helps:      {Dno helps for the new area, save and use {yhelp create{x\r\n");
     }
 
+    if (original) {
+        ostringstream buf;
+
+        const DLString lineFormatQuestEdit = 
+            "{W[" + web_cmd(ch, "qedit $1", "%6d") + "{W] {c%s{x, {C%d{x шаг%I|а|ов, уровни {C%d{x-{C%d{x\r\n";
+
+        for (auto &q: original->quests) {
+            buf << fmt(0, lineFormatQuestEdit.c_str(), 
+                    q->vnum.getValue(), 
+                    q->title.c_str(),
+                    q->steps.size(), q->steps.size(),
+                    q->minLevel.getValue(), q->maxLevel.getValue());
+        }
+
+        if (!buf.str().empty())
+            ch->pecho("Quests:\r\n" + buf.str());
+        else
+            ch->pecho("Quests:     (none) {D({y{hcquest create{x{D){x\r\n");
+
+    } else {
+        ptc(ch, "Quests:     {Dno quests for the new area, save and use {yquest create{x\r\n");
+    }
+
     return false;
 }
+
+static AreaQuest * arg_areaquest(const DLString &arg, AreaIndexData *pArea)
+{
+    Integer questId;
+
+    if (arg.isNumber() && Integer::tryParse(questId, arg)) {
+        auto q = pArea->questMap.find(questId);
+        if (q != pArea->questMap.end())        
+            return q->second;
+    }
+
+    return 0;
+}
+
+AEDIT(quest, "квест", "редактировать квесты в зоне")
+{
+    AreaIndexData *original = get_area_data(vnum);
+    DLString args = argument;
+    DLString arg = args.getOneArgument();
+
+    if (!original) {
+        ptc(ch, "No quests for the new area, save and use {yquest create{x\r\n");
+        return false;
+    }
+
+    // 'quest create' 'quest create 2300'
+    if (arg_oneof(arg, "create", "создать")) {
+        DLString argVnum = args.getOneArgument();
+        Integer vnum;
+
+        // 'quest create' - assign next free vnum
+        if (argVnum.empty()) {
+            for (vnum = original->min_vnum; vnum <= original->max_vnum; vnum++) {
+                if (original->questMap.find(vnum) == original->questMap.end())
+                    break;
+            }
+
+            if (vnum > original->max_vnum) {
+                ptc(ch, "В зоне не осталось свободного внума для квеста.\r\n");
+                return false;
+            }
+
+        } // 'quest create <vnum>' - check if vnum is valid
+        else if (!argVnum.isNumber() || !Integer::tryParse(vnum, argVnum)) {
+            ptc(ch, "Формат: quest create [номер]\r\n");
+            return false;
+        }
+
+        if (vnum < original->min_vnum || vnum > original->max_vnum) {
+            ptc(ch, "Номер квеста должен лежать в диапазоне от %d до %d.\r\n",
+                original->min_vnum, original->max_vnum);
+            return false;
+        }
+
+        AreaQuest::XMLPointer newQuest(NEW);
+        newQuest->vnum.setValue(vnum);
+        newQuest->pAreaIndex = original;
+
+        original->questMap[vnum] = *newQuest;
+        original->quests.push_back(newQuest);
+        areaQuests[vnum] = *newQuest;
+
+        OLCStateAreaQuest::Pointer qedit(NEW, *newQuest);
+        qedit->attach(ch);
+        qedit->show(ch);
+        return true;
+    }   
+
+    // 'quest delete 2300'
+    if (arg_oneof(arg, "delete", "удалить")) {
+        arg = args.getOneArgument();
+        AreaQuest *q = arg_areaquest(arg, original);
+
+        if (!q) {
+            ptc(ch, "Квест по номеру %s не определен.\r\n", arg.c_str());
+            return false;
+        }
+
+        original->questMap.erase(q->vnum.getValue());
+        areaQuests.erase(q->vnum.getValue());
+        original->quests.remove(q);
+
+        ptc(ch, "Квест удален!\r\n");
+        return true;
+    }
+
+    // 'quest 2300'
+    if (arg.isNumber()) {
+        AreaQuest *q = arg_areaquest(arg, original);
+
+        if (!q) {
+            ptc(ch, "Квест по номеру %s не определен.\r\n", arg.c_str());
+            return false;
+        }
+
+        OLCStateAreaQuest::Pointer qedit(NEW, q);
+        qedit->attach(ch);
+        qedit->show(ch);
+        return true;
+    }
+
+    ptc(ch, "Формат: quest <vnum>, quest create [<vnum>], quest delete <vnum>\r\n");
+    return false;
+}
+
 
 AEDIT(helps, "справка", "создать или посмотреть справку по зоне")
 {
@@ -307,7 +439,7 @@ AEDIT(create, "создать", "создать новую арию")
 {
     OLCStateArea::Pointer ae(NEW, (AreaIndexData *)NULL);
     ae->attach(ch);
-    ae->findCommand(ch, "show")->run(ch, "");
+    ae->findCommand(ch, "show")->entryPoint(ch, "");
 
     stc("Aрия создана.\n\r", ch);
     return false;
@@ -412,7 +544,6 @@ AEDIT(file, "файл", "установить имя файла, в которы
 AEDIT(security, "права", "установить уровень доступа к арии, 0..9")
 {
     char sec[MAX_STRING_LENGTH];
-    char buf[MAX_STRING_LENGTH];
     int value;
 
     one_argument(argument, sec);
@@ -426,8 +557,7 @@ AEDIT(security, "права", "установить уровень доступ�
 
     if (value > ch->getSecurity( ) || value < 0) {
         if (ch->getSecurity() != 0) {
-            sprintf(buf, "Security is 0-%d.\n\r", ch->getSecurity());
-            stc(buf, ch);
+            ch->pecho("Security is 0-%d.", ch->getSecurity());
         }
         else
             stc("Security is 0 only.\n\r", ch);
@@ -706,7 +836,7 @@ CMD(aedit, 50, "", POS_DEAD, 103, LOG_ALWAYS,
             }
             OLCStateArea::Pointer ae(NEW, (AreaIndexData *)NULL);
             ae->attach(ch);
-            ae->findCommand(ch, "show")->run(ch, "");
+            ae->findCommand(ch, "show")->entryPoint(ch, "");
             stc("Ария создана.\r\n", ch);
             return;
         }
@@ -719,6 +849,6 @@ CMD(aedit, 50, "", POS_DEAD, 103, LOG_ALWAYS,
 
     OLCStateArea::Pointer ae(NEW, pArea);
     ae->attach(ch);
-    ae->findCommand(ch, "show")->run(ch, "");
+    ae->findCommand(ch, "show")->entryPoint(ch, "");
 }
 

@@ -7,7 +7,6 @@
 #define _ONLINECREATION_H_
 
 #include "commandplugin.h"
-#include "defaultcommand.h"
 #include "pointer.h"
 #include "so.h"
 
@@ -19,7 +18,7 @@ typedef void do_fn_t (PCharacter *, char *);
 struct cmd_info;
 
 
-class OnlineCreation : public CommandPlugin, public DefaultCommand
+class OnlineCreation : public CommandPlugin
 {
 public:
         typedef ::Pointer<OnlineCreation> Pointer;

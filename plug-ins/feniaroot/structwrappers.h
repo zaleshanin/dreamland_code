@@ -195,6 +195,33 @@ protected:
 };
 
 /*----------------------------------------------------------------------
+ * Wearlocation
+ *----------------------------------------------------------------------*/
+class Wearlocation;
+
+class WearlocWrapper : public PluginNativeImpl<WearlocWrapper>, 
+                      public NativeHandler,
+                      public XMLVariableContainer 
+{
+XML_OBJECT
+NMI_OBJECT
+public:
+    typedef ::Pointer<WearlocWrapper> Pointer;
+
+    WearlocWrapper() { }
+    WearlocWrapper(const DLString &);
+            
+    virtual void setSelf(Scripting::Object *) { }
+    virtual Scripting::Object *getSelf() const { return 0; }
+    static Scripting::Register wrap( const DLString & );
+
+    XML_VARIABLE XMLString name;
+
+protected:
+    Wearlocation * getTarget() const;
+};
+
+/*----------------------------------------------------------------------
  * Material
  *----------------------------------------------------------------------*/
 struct material_t;
@@ -338,27 +365,6 @@ public:
 
 protected:
     XML_VARIABLE XMLString name;
-};
-
-class FeniaSkill : public PluginNativeImpl<FeniaSkill>, 
-                       public NativeHandler,
-                       public BasicSkill
-{
-XML_OBJECT
-NMI_OBJECT
-public:
-    typedef ::Pointer<FeniaSkill> Pointer;
-
-    FeniaSkill() { }
-    FeniaSkill(const DLString &);
-
-    virtual void setSelf(Scripting::Object *);
-    virtual Scripting::Object *getSelf() const { return self; }
-    static Scripting::Register wrap( const DLString & );
-    virtual void backup();
-private:
-    Scripting::Object *self;
-    XML_VARIABLE XMLString myname;
 };
 
 #endif

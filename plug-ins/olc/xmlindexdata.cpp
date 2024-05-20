@@ -5,6 +5,7 @@
 
 #include <sstream>
 #include <errno.h>
+#include <string.h>
 
 #include "wrappermanager.h"
 #include "wrapperbase.h"
@@ -19,7 +20,7 @@
 #include "olcstate.h"
 #include "olc.h"
 #include "affect.h"
-#include "mercdb.h"
+
 #include "def.h"
 
 void load_mobile(FILE *, MOB_INDEX_DATA *);

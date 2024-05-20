@@ -3,22 +3,24 @@ dnl AC_CHECK_BDB
 
 AC_DEFUN([AC_CHECK_BDB],
 [
-    AC_CACHE_CHECK([for DbEnv::DbEnv], [ac_cv_bdb],
-    [
-	ac_cv_bdb_safelibs=$LIBS
-	LIBS="-ldb_cxx $LIBS"
-	AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <db_cxx.h>]],
+  AC_CACHE_CHECK([for DbEnv::DbEnv], [ac_cv_bdb],
+  [
+	    ac_cv_bdb_safelibs=$LIBS
+	    LIBS="-ldb_cxx $LIBS"
+	    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <db_cxx.h>]],
 				        [[DbEnv db( 0 );]])],
 		[ac_cv_bdb=yes],
 		[ac_cv_bdb=no])
-	LIBS=$ac_cv_bdb_safelibs
-    ])
+	  LIBS=$ac_cv_bdb_safelibs
+  ])
 
-    if test $ac_cv_bdb = yes; then
-	BDB_LIBS=" -ldb_cxx"
-	AC_SUBST(BDB_LIBS)
-	AC_DEFINE(HAS_BDB, 1, [use berkley db])
-    fi
+  if test $ac_cv_bdb = yes; then
+	  BDB_LIBS=" -ldb_cxx"
+	  AC_SUBST(BDB_LIBS)
+  fi
+  if test $ac_cv_bdb = no; then
+    AC_MSG_ERROR(BDB support is needed.)
+  fi
 ])
 
 dnl Check for the type of the third argument of getsockname
@@ -234,25 +236,6 @@ dnl
   fi
 ])
 
-AC_DEFUN([AC_CHECK_MCCP],
-[
-    AC_MSG_CHECKING(whether to enable MCCP support)
-
-    MCCP_LIBS=""
-	WITH_MCCP="no"
-
-	AC_CHECK_LIB(z, deflate, MCCP_LIBS="-lz")
-	if test -n "$MCCP_LIBS"; then
-	    AC_CHECK_HEADER(zlib.h, 
-		[WITH_MCCP="yes"
-		 AC_DEFINE(MCCP, 1, [use mccp])	    
-		])
-	fi
-
-    AC_SUBST(MCCP_LIBS)
-	
-])
-
 AC_DEFUN([AC_CHECK_GC],
 [
     AC_MSG_CHECKING(whether to enable GC support (memory leakage detecting))
@@ -298,21 +281,6 @@ AC_DEFUN([AC_FAKE_CLOSEDIR_VOID],
     ])
 ])
     
-AC_DEFUN([AC_CHECK_MINGW],
-[
-    AC_MSG_CHECKING([for mingw32])
-    AC_CACHE_VAL(ac_cv_mingw32,
-      AC_EGREP_CPP(yes,[
-#ifdef __MINGW32__
-yes
-#endif
-      ], ac_cv_mingw32=yes, ac_cv_mingw32=no))
-    
-    AC_MSG_RESULT($ac_cv_mingw32)
-    AM_CONDITIONAL(WITH_MINGW, test $ac_cv_mingw32 = yes)
-])
-
-
 AC_DEFUN([AC_CHECK_BITNESS],
 [
     case $host_cpu in

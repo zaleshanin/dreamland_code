@@ -7,16 +7,23 @@
 #define        COMMANDPLUGIN_H
 
 #include "plugin.h"
-#include "command.h"
+#include "wrappedcommand.h"
 
-class CommandPlugin : public virtual XMLCommand, public virtual Plugin {
+/** Represents a command with a profile on disk, defined as a separate plugin. 
+*/
+class CommandPlugin : public virtual WrappedCommand,                       
+                      public virtual Plugin {
 public:
         typedef ::Pointer<CommandPlugin> Pointer;
 
+        virtual bool saveCommand() const;
+
         virtual void initialization( );
         virtual void destruction( );
+        virtual CommandLoader * getLoader( ) const;
 };
 
+/** Convenience macro to shorten command definition */
 #define COMMAND(C, cmdname)              \
 const DLString C::COMMAND_NAME = cmdname; \
 C::C( )                                  \
@@ -24,5 +31,6 @@ C::C( )                                  \
     this->name = COMMAND_NAME;           \
 }                                        \
 void C::run( Character* ch, const DLString& constArguments ) 
+
 
 #endif

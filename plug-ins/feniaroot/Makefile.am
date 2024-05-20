@@ -34,9 +34,11 @@ spellwrapper.cpp \
 affecthandlerwrapper.cpp \
 feniaspellext.cpp \
 skillcommandwrapper.cpp \
+areaquestwrapper.cpp \
 wrap_utils.cpp \
 feniacroaker.cpp \
-codesourcerepo.cpp
+commandtableloader.cpp \
+codesourcerepo.cpp 
 
 libfeniaroot_la_MOC = \
 root.h \
@@ -54,8 +56,8 @@ areaindexwrapper.h \
 spellwrapper.h \
 affecthandlerwrapper.h \
 skillcommandwrapper.h \
-characterwrapper.h 
-
+areaquestwrapper.h \
+characterwrapper.h
 
 plugin_INCLUDES = \
 -I$(top_srcdir)/plug-ins/ed \

@@ -7,7 +7,7 @@
 #include "xmlattributecards.h"
 
 #include "class.h"
-#include "char.h"
+
 
 #include "skill.h"
 #include "skillreference.h"
@@ -23,7 +23,7 @@
 #include "fight.h"
 #include "handler.h"
 #include "act.h"
-#include "mercdb.h"
+
 #include "merc.h"
 #include "descriptor.h"
 #include "def.h"
@@ -55,7 +55,7 @@ bool CardPackBehavior::examine( Character *looker )
     if (looker->is_npc( ))
         return false;
     
-    looker->printf( "Сегодня козырь %s.\r\n", 
+    looker->pecho( "Сегодня козырь %s.", 
             russian_case( XMLAttributeCards::getTrumpFace( ).mlt, 1 ).c_str( ) );
 
     for (d = descriptor_list; d != 0; d = d->next) {
@@ -76,10 +76,10 @@ bool CardPackBehavior::examine( Character *looker )
             continue;
         
         if (fEmpty)
-            looker->printf( "Колода содержит: \r\n" );
+            looker->pecho( "Колода содержит: " );
         
         fEmpty = false;
-        looker->printf( "    %-20s %s\r\n", 
+        looker->pecho( "    %-20s %s", 
                 victim->getNameC(),
                 attr->getFace( '1' ).c_str( ) );
     }
@@ -137,8 +137,8 @@ bool CardPackBehavior::use( Character *user, const char *args )
     
         card = create_object( pCardIndex, 0 );
         card->timer = (1 + myAttr->getLevel( )) * 3 * 60 * 60;
-        card->fmtShortDescr( card->getShortDescr( ), victim->getNameP( '2' ).c_str( ) );
-        card->fmtName( card->getName( ), victim->getName( ).c_str( ) );
+        card->setShortDescr( fmt(0, card->getShortDescr( ), victim->getNameP( '2' ).c_str( )) );
+        card->setName( fmt(0, card->getName( ), victim->getName( ).c_str( )).c_str() );
         
         CardBehavior::Pointer bhv( NEW );
         bhv->setObj( card );
@@ -455,7 +455,7 @@ bool CardBehavior::examine( Character *looker )
     else
         room = victim->in_room;
 
-    pch->printf("По деталям заднего плана ты начинаешь узнавать место. Кажется, это '%s'.\r\n", room->getName() );
+    pch->pecho("По деталям заднего плана ты начинаешь узнавать место. Кажется, это '%s'.", room->getName() );
     gsn_peek_card->improve( pch, true );
     pch->mana -= mana;
 

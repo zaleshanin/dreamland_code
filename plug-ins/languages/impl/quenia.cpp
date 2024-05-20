@@ -11,7 +11,7 @@
 #include "class.h"
 #include "pcharacter.h"
 
-#include "mercdb.h"
+#include "merc.h"
 #include "def.h"
 
 const DLString QueniaLanguage::LANG_NAME = "quenia";
@@ -265,7 +265,7 @@ void QueniaLanguage::correct( DLString &d ) const
 
 void QueniaLanguage::dream( const Word &word, PCharacter *ch ) const
 {
-    ch->printf( "Сквозь зыбкую пелену сна тебе является слово {c%s{x.\r\n",
+    ch->pecho( "Сквозь зыбкую пелену сна тебе является слово {c%s{x.",
                 word.toStr( ) ); 
 }
 

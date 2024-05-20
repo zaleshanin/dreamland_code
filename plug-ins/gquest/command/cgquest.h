@@ -7,14 +7,13 @@
 #define CGQUEST_H
 
 #include "commandplugin.h"
-#include "defaultcommand.h"
 
 class PCharacter;
 namespace Scripting {
 class IdRef;
 };
 
-class CGQuest : public CommandPlugin, public DefaultCommand {
+class CGQuest : public CommandPlugin {
 public:
         typedef ::Pointer<CGQuest> Pointer;
 

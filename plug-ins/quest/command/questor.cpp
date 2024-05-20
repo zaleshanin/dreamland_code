@@ -15,7 +15,7 @@
 #include "merc.h"
 #include "../../anatolia/handler.h"
 #include "act.h"
-#include "mercdb.h"
+
 
 #include "clan.h"
 #include "clantypes.h"
@@ -583,7 +583,7 @@ void Questor::doRequest(PCharacter *client, const DLString &arg)
         buf << endl;
         for (index = 1, q = quests.begin(); q != quests.end(); index++, q++) {
             DLString d = (*q)->getDifficulty();
-            buf << dlprintf("     {W%2d{x. %-25s {D(%s){x \r\n",
+            buf << fmt(0, "     {W%2d{x. %-25s {D(%s){x \r\n",
                             index, (*q)->getShortDescr().c_str(), d.c_str());
         }
         buf << endl;

@@ -17,7 +17,7 @@
 #include "cclantalk.h"
 
 #include "commonattributes.h"
-#include "char.h"
+
 #include "util/regexp.h"
 
 #include "commandtemplate.h"
@@ -42,7 +42,7 @@
 #include "merc.h"
 
 #include "comm.h"
-#include "mercdb.h"
+
 #include "handler.h"
 #include "interp.h"
 #include "vnum.h"
@@ -250,7 +250,7 @@ HunterEquip::HunterEquip( )
 
 void HunterEquip::config( PCharacter *wch )
 {
-    obj->fmtShortDescr( obj->getShortDescr( ), wch->getNameP('2').c_str() );
+    obj->setShortDescr( fmt(0, obj->getShortDescr( ), wch->getNameP('2').c_str()));
     obj->setOwner( wch->getNameC() );
     obj->from = str_dup( wch->getNameC() );
     obj->level = wch->getRealLevel( );
@@ -259,8 +259,8 @@ void HunterEquip::config( PCharacter *wch )
     if (obj->pIndexData->extra_descr) {
         char buf[MAX_STRING_LENGTH];
 
-        sprintf( buf, obj->pIndexData->extra_descr->description, wch->getNameP('1').c_str() );
-        obj->addExtraDescr( obj->pIndexData->extra_descr->keyword, buf );
+        DLString ed = fmt(0, obj->pIndexData->extra_descr->description, wch->getNameP('1').c_str());
+        obj->addExtraDescr( obj->pIndexData->extra_descr->keyword, ed );
     }
 }   
 
@@ -629,7 +629,6 @@ SKILL_RUNP( hunt )
 SPELL_DECL(FindObject);
 VOID_SPELL(FindObject)::run( Character *ch, char *target_name, int sn, int level ) 
 { 
-    char buf[MAX_INPUT_LENGTH];
     ostringstream buffer;
     Object *obj;
     Object *in_obj;
@@ -656,24 +655,25 @@ VOID_SPELL(FindObject)::run( Character *ch, char *target_name, int sn, int level
         for ( in_obj = obj; in_obj->in_obj != 0; in_obj = in_obj->in_obj )
             ;
 
+        DLString where;
+
         if ( in_obj->carried_by != 0 && ch->can_see(in_obj->carried_by))
         {
-            sprintf( buf, "имеется у %s\n\r",
+            where = fmt(0, "имеется у %s\n\r",
                 ch->sees(in_obj->carried_by,'2').c_str() );
         }
         else
         {
             if (ch->is_immortal() && in_obj->in_room != 0)
-                sprintf( buf, "находится в %s [Комната %d]\n\r",
+                where = fmt(0, "находится в %s [Комната %d]\n\r",
                     in_obj->in_room->getName(), in_obj->in_room->vnum);
             else
-                sprintf( buf, "находится в %s\n\r",
+                where = fmt(0, "находится в %s\n\r",
                     in_obj->in_room == 0
                         ? "somewhere" : in_obj->in_room->getName() );
         }
 
-        buf[0] = Char::upper(buf[0]);
-        buffer << buf;
+        buffer << where.upperFirstCharacter();
 
         if (number >= max_found)
             break;
@@ -921,8 +921,8 @@ void HunterBeaconTrap::greet( Character *victim )
 //    oldact("Рядом с тобой раздается щелчок.", victim, 0, 0, TO_ALL );
 
     clantalk( *clan_hunter, 
-              "Внимание! Сработал маяк, установленный в '%s' и настроенный на появление %s.",
-              obj->in_room->getName(), victim->getNameP( '2' ).c_str( ) );
+              fmt(0, "Внимание! Сработал маяк, установленный в '%s' и настроенный на появление %s.",
+              obj->in_room->getName(), victim->getNameP( '2' ).c_str( )) );
     
     log( victim, "активизирует" );
 
@@ -1082,7 +1082,7 @@ void HunterSnareTrap::greet( Character *victim )
     obj_to_char( obj, victim );
     equip_char( victim, obj, wear_hold_leg );
     SET_BIT(obj->wear_flags, ITEM_TAKE);
-    obj->fmtDescription( "Разломанный %s лежит тут.", obj->getShortDescr( '1' ).c_str( ) );
+    obj->setDescription( fmt(0, "Разломанный %s лежит тут.", obj->getShortDescr( '1' ).c_str( )) );
     obj->timer = 24;
     activated = false;
     
@@ -1503,9 +1503,9 @@ bool HunterPitTrap::isFresh( ) const
 
 void HunterPitTrap::setDescription( )
 {
-    obj->fmtDescription( 
-            "В земле вырыта яма %s размера.", 
-            size_table.message(URANGE( SIZE_TINY, getSize( ), SIZE_GARGANTUAN ), '2' ).c_str( ) );
+    obj->setDescription( 
+            fmt(0, "В земле вырыта яма %s размера.", 
+            size_table.message(URANGE( SIZE_TINY, getSize( ), SIZE_GARGANTUAN ), '2' ).c_str( )) );
 }
 
 /*

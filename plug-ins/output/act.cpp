@@ -9,7 +9,7 @@
 #include "msgformatter.h"
 #include "mudtags.h"
 
-#include "char.h"
+
 #include "logstream.h"
 #include "profiler.h"
 #include "noun.h"
@@ -26,7 +26,7 @@
 #include "descriptor.h"
 #include "colour.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "def.h"
 
 /*--------------------------------------------------------------------------
@@ -120,7 +120,7 @@ void oldact_p( const char *format, Character *ch, const void *arg1,
 /*--------------------------------------------------------------------------
  * fmt and vfmt (new format concept)
  *--------------------------------------------------------------------------*/
-#define MAXARGS 60
+#define MAXARGS 256
 
 struct VarArgFormatter : public MsgFormatter {
     VarArgFormatter(Character *to) : MsgFormatter(to) {
@@ -204,79 +204,6 @@ DLString vfmt(Character *to, const char *format, va_list av)
     return formatter.vfmt(format, av);
 }
 
-/*---------------------------------------------------------------------
- * simplified printf, understands color length in formatting
- *--------------------------------------------------------------------*/
-DLString dlprintf( const char *fmt, ... ) 
-{
-    DLString result; 
-    va_list arglist;
-    const char *p = fmt;
-    
-    va_start(arglist, fmt);
-    
-    while (*p) {
-        DLString word;
-        bool left = false;
-        int width = 0;
-
-        if (*p != '%') {
-            result += *p++;
-            continue;
-        }
-        
-        ++p;
-        
-        if (*p == '%') {
-            result += '%';
-            p++;
-            continue;
-        }
-
-        if (*p == '-') {
-            left = true;
-            ++p;
-        }         
-
-        while (isdigit( *p )) {
-            width += width * 10 + *p - '0';
-            p++;
-        }
-       
-        switch( *p ) {
-        case 's':
-            word += va_arg( arglist, char * );
-            break;
-        case 'd':
-        case 'i':
-        case 'l':
-            word += (int) va_arg( arglist, int ); /* XXX */
-            break;
-        case 'c':
-            word += (char) va_arg( arglist, int );
-            break;
-        default:
-            word += va_arg( arglist, int );
-            break;
-        }
-
-        if (left)
-            result += word;
-    
-        for (int i = 0; i < width - (int) word.colorLength( ); i++)
-            result += ' ';
-
-        if (!left)
-            result += word;
-        
-        if (*p)
-            p++;
-    }
-
-    va_end( arglist );
-    return result;
-}
-
 
 /*--------------------------------------------------------------------------
  * tell-like output 
@@ -315,15 +242,13 @@ void say_fmt( const char *msg, ... )
 
 void tell_raw(Character *ch, NPCharacter *talker, const char *format, ...)
 {
-    char buf[MAX_STRING_LENGTH];
     va_list ap;
 
     va_start(ap, format);
-    vsprintf(buf, format, ap);
+    DLString messageMiddle = vfmt(0, format, ap);
     va_end(ap);
 
     DLString messageStart = fmt(ch, "%^C1 говорит тебе '{G", talker);
-    DLString messageMiddle = buf;
     DLString messageEnd = "{x'\n\r";
 
     ch->send_to(messageStart + messageMiddle + messageEnd);
@@ -424,4 +349,25 @@ void echo_notvict(Character *ch, Character *victim, bool (needsOutput)(Character
     va_start(av, format);
     ch->vecho( POS_RESTING, TO_NOTVICT, victim, format, av, needsOutput ); 
     va_end(av);
+}
+
+DLString print_columns(const list<DLString> &names, int width, int columns)
+{
+    int col = 0;
+    DLString pattern;
+    ostringstream out;
+
+    pattern << "%-" << width << "s";
+
+    for (auto &name: names) {
+        out << fmt(0, pattern.c_str(), name.c_str());
+
+        if (++col % columns == 0)
+            out << endl;
+    }
+
+    if (col % columns != 0)
+        out << endl;
+
+    return out.str();
 }

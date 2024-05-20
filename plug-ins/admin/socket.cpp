@@ -10,11 +10,8 @@
     email                : nofate@europe.com
  ***************************************************************************/
 
-#ifndef __MINGW32__
+#include <string.h>
 #include <arpa/inet.h>
-#else
-#include <winsock.h>
-#endif
 
 #include "admincommand.h"
 #include "serversocketcontainer.h"
@@ -24,6 +21,7 @@
 #include "pcharactermanager.h"
 #include "merc.h"
 #include "descriptor.h"
+#include "act.h"
 
 CMDADM( socket )
 {
@@ -56,7 +54,7 @@ CMDADM( socket )
             }
             
             if(arg.strPrefix(name) || arg == DLString(d->descriptor)) {
-                ch->printf( "Connected from: %s(%s)\r\n", d->realip, d->host );
+                ch->pecho( "Connected from: %s(%s)", d->realip, d->host );
 
                 if(d->via.empty())
                     ch->pecho("No via records for this descriptor.");
@@ -64,7 +62,7 @@ CMDADM( socket )
                     ViaVector::iterator it;
 
                     for(it = d->via.begin(); it != d->via.end(); it++)
-                        ch->printf("Via: %s(%s)\r\n", 
+                        ch->pecho("Via: %s(%s)", 
                                 it->second.c_str(), 
                                 inet_ntoa(it->first));
 
@@ -81,8 +79,8 @@ CMDADM( socket )
         const char *myHost, *myIP;
         DLString p;
         const char * state;
-        char logon[100];
-        char idle[10];
+        DLString logon;
+        DLString idle;
 
         if (d->character) {
             PCharacter *player;
@@ -105,12 +103,12 @@ CMDADM( socket )
         }
         
         if (d->character && d->connected == CON_PLAYING) {
-            strncpy( logon, d->character->getPC( )->age.getLogon( ).getTimeAsString( "%H:%M" ).c_str( ), 100 );
-            sprintf( idle, "%3d", d->character->timer );
+            logon = d->character->getPC( )->age.getLogon( ).getTimeAsString( "%H:%M" );
+            idle = fmt(0, "%3d", d->character->timer);
         }
         else {
-            sprintf( logon, "-----" );
-            sprintf( idle, "   " );
+            logon = "-----";
+            idle = "   ";
         }
         
         switch (d->connected) {
@@ -133,22 +131,18 @@ CMDADM( socket )
             p = (ServerSocketContainer::isWrapped(d->control) ? "*" : " "); 
         }
         
-        ch->printf( "[%3d %10s %-5s %s %c %s] %-12s %-15s %s\n\r",
+        ch->pecho( "[%3d %10s %-5s %s %c %s] %-12s %-15s %s",
                         d->descriptor,
                         state,
-                        logon,
-                        idle,
-#ifdef MCCP
+                        logon.c_str(),
+                        idle.c_str(),
                         d->out_compress ? '*' : ' ',
-#else
-                        'X',
-#endif
                         p.c_str( ),
                         name.c_str( ),
                         (ip || !*myHost) ? myIP : myHost,
                         (d->character && d->character->is_npc() ? "switched" : "") );
     }
 
-    ch->printf( "\n\r%d user%s\n\r", count, count == 1 ? "" : "s" );
+    ch->pecho( "\n\r%d user%s", count, count == 1 ? "" : "s" );
 }
 

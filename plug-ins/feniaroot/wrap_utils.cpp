@@ -2,6 +2,8 @@
  *
  * ruffina, 2004
  */
+#include <string.h>
+
 #include "wrap_utils.h"
 #include "logstream.h"
 
@@ -18,6 +20,7 @@
 #include "defaultspell.h"
 #include "defaultaffecthandler.h"
 #include "spelltarget.h"
+#include "commandmanager.h"
 
 #include "tableswrapper.h"
 #include "objectwrapper.h"
@@ -30,6 +33,7 @@
 #include "spellwrapper.h"
 #include "affecthandlerwrapper.h"
 #include "xmleditorinputhandler.h"
+#include "commandwrapper.h"
 
 #include "directions.h"
 #include "subr.h"
@@ -155,6 +159,27 @@ DefaultAffectHandler * arg2affecthandler( const Register &reg )
                 wrapper_cast<AffectHandlerWrapper>(reg)->getTarget());;
 }
 
+WrappedCommand * arg2command(const Register &arg) 
+{
+    DLString cmdName = arg2string(arg);
+    Command::Pointer cmd = commandManager->findExact(cmdName);
+
+    if (!cmd)
+        throw Scripting::Exception(cmdName + ": no registered command found");
+
+    WrappedCommand *wcmd = cmd.getDynamicPointer<WrappedCommand>();
+    if (!wcmd)
+        throw Scripting::Exception(cmdName + ": this command is not accessible via Fenia");
+
+    return wcmd;
+}
+
+WrappedCommand * argnum2command(const RegisterList &args, int num)
+{
+    const Register &reg = argnum(args, num);
+    return arg2command(reg);
+}
+
 void args2buf(const RegisterList &args, char *buf, size_t bufsize)
 {
     strncpy(buf, args2string(args).c_str(), bufsize);
@@ -207,6 +232,14 @@ PCharacter *argnum2player(const RegisterList &args, int num)
     if (ch->is_npc())
         throw Scripting::Exception("Mobile found when PC expected.");
     return ch->getPC();
+}
+
+NPCharacter *argnum2mobile(const RegisterList &args, int num)
+{
+    Character *ch = argnum2character(args, num);
+    if (!ch->is_npc())
+        throw Scripting::Exception("PC found when mobile expected.");
+    return ch->getNPC();
 }
 
 PCMemoryInterface * argnum2memory(const RegisterList &args, int num)

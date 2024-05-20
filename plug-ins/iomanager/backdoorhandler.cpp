@@ -2,6 +2,8 @@
  *
  * ruffina, 2004
  */
+#include <string.h>
+
 #include "backdoorhandler.h"
 #include "interprethandler.h"
 #include "descriptor.h"
@@ -18,7 +20,7 @@
 #include "loadsave.h"
 #include "interp.h"
 #include "wiznet.h"
-#include "mercdb.h"
+
 #include "vnum.h"
 #include "def.h"
 

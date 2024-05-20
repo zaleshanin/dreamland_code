@@ -11,7 +11,7 @@
 #include "object.h"
 #include "act.h"
 #include "interp.h"
-#include "mercdb.h"
+
 #include "handler.h"
 #include "merc.h"
 #include "def.h"
@@ -48,7 +48,7 @@ void KS::msgRemoteReunion( NPCharacter *kid, NPCharacter *king, PCharacter *hero
     interpret_raw( king, "grin" );
     oldact("$c1 глядя на $C4 произносит: '{gО, вот и обед подоспел{x'.", king, 0, kid, TO_ROOM);
     oldact("$c1 хватает дите за руку.", king, 0, 0, TO_ROOM);
-    hero->printf( "%s и %s уже встретились.\r\n", king->getNameP( '1' ).c_str( ), kid->getNameP( '1' ).c_str( ) );
+    hero->pecho( "%s и %s уже встретились.", king->getNameP( '1' ).c_str( ), kid->getNameP( '1' ).c_str( ) );
     oldact("Сходи, проведай $C4.", hero, 0, king, TO_CHAR);
 }
 void KS::msgKingDeath( NPCharacter *king, Character *killer, PCharacter *hero ) const
@@ -130,7 +130,7 @@ void KS::actLegend( NPCharacter *king, PCharacter *hero, KidnapQuest::Pointer qu
 }
 void KS::actGiveMark( NPCharacter *king, PCharacter *hero, Object * mark, int time ) const 
 {
-    char buf[MAX_STRING_LENGTH];
+    DLString msg;
 
     if(number_percent() < 50) {
         oldact("$c1 говорит тебе '{GЯ бы са$gмо|м|ма навести$gло|л|ла его, но голод ослабил меня.{x'", king, 0, hero, TO_VICT);
@@ -138,18 +138,18 @@ void KS::actGiveMark( NPCharacter *king, PCharacter *hero, Object * mark, int ti
         oldact("$c1 дает тебе $o4.", king, mark, hero, TO_VICT);
         oldact("$c1 вручает $C3 $o4.", king, mark, hero, TO_NOTVICT);
         oldact("$c1 говорит тебе '{GПриведи его сюда.{x'", king, 0, hero, TO_VICT);
-        sprintf( buf, "$c1 говорит тебе '{GИ поспеши! Чувствую, что через {Y%d{G минут%s он мне уже не понадобится.{x",
+        msg = fmt(0, "$c1 говорит тебе '{GИ поспеши! Чувствую, что через {Y%d{G минут%s он мне уже не понадобится.{x",
                  time, GET_COUNT(time, "у", "ы", "") );
     } else {
         oldact("$c1 говорит тебе '{GЯ бы и са$gмо|м|ма навести$gло|л|ла его, но жду гостей, надо многое приготовить, а времени нет.{x'", king, 0, hero, TO_VICT);
         oldact("$c1 говорит тебе '{GВот, возьми эту деревяшку, думаю как приманка сработает.{x'", king, 0, hero, TO_VICT);
         oldact("$c1 дает тебе $o4.", king, mark, hero, TO_VICT);
         oldact("$c1 вручает $C3 $o4.", king, mark, hero, TO_NOTVICT);
-        sprintf( buf, "$c1 говорит тебе '{GПоспеши! Через {Y%d{G минут%s он должен быть здесь!{x",
+        msg = fmt(0, "$c1 говорит тебе '{GПоспеши! Через {Y%d{G минут%s он должен быть здесь!{x",
                  time, GET_COUNT(time, "у", "ы", "") );
     }
 
-    oldact(buf, king, 0, hero, TO_VICT);
+    oldact(msg.c_str(), king, 0, hero, TO_VICT);
 }
 void KS::actMarkLost( NPCharacter *king, PCharacter *hero, Object * mark ) const 
 {

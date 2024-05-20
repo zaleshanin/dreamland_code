@@ -4,7 +4,7 @@
  */
 #include "logstream.h"
 #include "commandhelp.h"
-#include "command.h"
+#include "commandplugin.h"
 #include "commandmanager.h"
 #include "character.h"
 
@@ -15,6 +15,9 @@ bool CommandHelp::visible( Character *ch ) const
 {
     if (!HelpArticle::visible( ch ))
         return false;
+
+    if (empty())
+        return false;
     
     if (getLevel( ) <= 0)
         return true;
@@ -24,13 +27,10 @@ bool CommandHelp::visible( Character *ch ) const
 
 void CommandHelp::save() const
 {
-    if (command) {
-        const XMLCommand *cmd = command.getDynamicPointer<XMLCommand>();
-        if (cmd)
-            commandManager->save(cmd);
-        else
-            LogStream::sendError() << "Failed to save command help on command " << command->getName() << endl;
-    }
+    if (command && command->saveCommand())
+        return;
+
+    LogStream::sendError() << "Failed to save command help on command " << command->getName() << endl;
 }
 
 DLString CommandHelp::getTitle(const DLString &label) const
@@ -62,7 +62,6 @@ void CommandHelp::setCommand( Command::Pointer command )
         command->getCommandCategory().names());
     labels.addTransient(LABEL_COMMAND);
 
-    // TODO: get rid of ref/reby malarky, each command should have its own help.
     for (r = ref.begin( ); r != ref.end( ); r++) {
         Command::Pointer cmd = commandManager->findExact( *r );
 
@@ -75,18 +74,33 @@ void CommandHelp::setCommand( Command::Pointer command )
     for (r = refby.begin( ); r != refby.end( ); r++) {
         Command::Pointer cmd = commandManager->findExact( *r );
 
-        if (cmd && cmd->getHelp( ))
+        if (cmd && cmd->getHelp( )) {
             cmd->getHelp( )->addAutoKeyword(getAllKeywords());
+        }
     }
    
-    if (!empty( ))
-        helpManager->registrate( Pointer( this ) );
+    helpManager->registrate( Pointer( this ) );
 }
+
+CommandHelp::Pointer CommandHelp::getReferencedBy()
+{
+    CommandHelp::Pointer refHelp;
+
+    if (!refby.empty()) {
+        DLString cmdName = *(refby.begin());
+        Command::Pointer cmd = commandManager->findExact(cmdName);
+        if (cmd && cmd->getHelp()) {
+            refHelp = cmd->getHelp();
+        }
+    }
+    
+    return refHelp;
+}
+
 
 void CommandHelp::unsetCommand( )
 {
-    if (!empty( ))
-        helpManager->unregistrate( Pointer( this ) );
+    helpManager->unregistrate( Pointer( this ) );
     
     command.clear( );
     keywordsAuto.clear();

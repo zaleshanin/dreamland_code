@@ -10,7 +10,6 @@
 #include "objectbehaviormanager.h"
 #include "personalquestreward.h"
 #include "commandplugin.h"
-#include "defaultcommand.h"
 #include "clanmobiles.h"
 
 class Object;
@@ -57,7 +56,7 @@ protected:
         XML_VARIABLE XMLBoolean healPets;
 };
 
-class CChop : public CommandPlugin, public DefaultCommand {
+class CChop : public CommandPlugin {
 public:
     typedef ::Pointer<CChop> Pointer;
 

@@ -7,7 +7,7 @@
 #include "wrapperbase.h"
 #include "register-impl.h"
 #include "lex.h"
-#include "char.h"
+
 
 #include "ban.h"
 #include "colour.h"
@@ -29,7 +29,7 @@
 #include "websocketrpc.h"
 #include "wiznet.h"
 #include "act.h"
-#include "mercdb.h"
+
 #include "def.h"
 
 LIQ(none);
@@ -170,7 +170,7 @@ InterpretHandler::handle(Descriptor *d, char *arg)
     if (omprog_command( iargs.ch, iargs.cmdName, iargs.cmdArgs ))
         return 0;
 
-    iargs.pCommand->run( iargs.ch, iargs.cmdArgs );
+    iargs.pCommand->entryPoint( iargs.ch, iargs.cmdArgs );
     return 0;
 }
 
@@ -192,8 +192,8 @@ void InterpretHandler::normalPrompt( Character *ch )
         str = ch->prompt.c_str( );
 
     if ( !str || !*str ) {
-        ch->printf( "<%dhp %dm %dmv> %s",
-                ch->hit.getValue( ), ch->mana.getValue( ), ch->move.getValue( ), ch->prefix );
+        ch->send_to( fmt(0, "<%dhp %dm %dmv> %s",
+                ch->hit.getValue( ), ch->mana.getValue( ), ch->move.getValue( ), ch->prefix) );
         return;
     }
 

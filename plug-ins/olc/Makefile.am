@@ -11,6 +11,7 @@ aedit.cpp \
 hedit.cpp \
 reledit.cpp \
 skedit.cpp \
+cmdedit.cpp \
 medit.cpp \
 oedit.cpp \
 eeedit.cpp \
@@ -25,11 +26,10 @@ ovalues.cpp \
 security.cpp \
 socedit.cpp \
 webedit.cpp \
-orandom.cpp \
-argparser.cpp \
 feniatriggers.cpp \
 fedit.cpp \
-raceedit.cpp
+raceedit.cpp \
+qedit.cpp 
 
 libolc_la_MOC = \
 redit.h \
@@ -37,6 +37,7 @@ aedit.h \
 hedit.h \
 reledit.h \
 skedit.h \
+cmdedit.h \
 medit.h \
 sedit.h \
 socedit.h \
@@ -45,7 +46,8 @@ eeedit.h \
 security.h \
 olcstate.h \
 fedit.h \
-raceedit.h
+raceedit.h \
+qedit.h
 
 
 include $(top_srcdir)/plug-ins/Makefile.inc

@@ -18,7 +18,7 @@
 #include "hometown.h"
 #include "merc.h"
 #include "arg_utils.h"
-#include "mercdb.h"
+
 #include "def.h"
 
 HOMETOWN(frigate);
@@ -200,10 +200,10 @@ void HomeRecall::doSet( PCharacter * ch, DLString &arg )
     PCharacterManager::saveMemory( pci );
 
     if (label.empty( ))
-        ch->printf( "Персонажу %s установлен основной дом в комнате [%d] %s.\r\n", 
+        ch->pecho( "Персонажу %s установлен основной дом в комнате [%d] %s.", 
                 pci->getName( ).c_str( ), vnum, target->getName()  );
     else
-        ch->printf( "Персонажу %s установлен дом с меткой %s в комнате [%d] %s.\r\n", 
+        ch->pecho( "Персонажу %s установлен дом с меткой %s в комнате [%d] %s.", 
                 pci->getName( ).c_str( ), label.c_str( ), vnum, target->getName()  );
 }
 
@@ -232,7 +232,7 @@ void HomeRecall::doShow( PCharacter * ch, DLString &arg )
     
     attr = pci->getAttributes( ).findAttr<XMLAttributeHomeRecall>( "homerecall" ); 
     if (!attr) {
-        ch->printf( "%s бездомное..\r\n", pci->getName( ).c_str( ) );
+        ch->pecho( "%s бездомное..", pci->getName( ).c_str( ) );
         return;
     }
     
@@ -261,7 +261,7 @@ void HomeRecall::doRemove( PCharacter * ch, DLString &arg )
     
     attr = pci->getAttributes( ).findAttr<XMLAttributeHomeRecall>( "homerecall" ); 
     if (!attr) {
-        ch->printf( "%s бездомное..\r\n", pci->getName( ).c_str( ) );
+        ch->pecho( "%s бездомное..", pci->getName( ).c_str( ) );
         return;
     }
 
@@ -273,7 +273,6 @@ void HomeRecall::doRemove( PCharacter * ch, DLString &arg )
 
 void HomeRecall::doList( PCharacter *ch ) 
 {
-    char buf[MAX_STRING_LENGTH];
     int point;
     Room * room;
     PCharacterMemoryList::const_iterator i;
@@ -291,12 +290,10 @@ void HomeRecall::doList( PCharacter *ch )
         point = attr->getPoint( );
         room = get_room_instance( point );
         
-        sprintf( buf, "%-15s [%-5d] %-25.25s (%s)\r\n", 
+        ch->pecho("%-15s [%-5d] %-25.25s (%s)", 
                  i->second->getName( ).c_str( ), point, 
                  (room ? room->getName() : "{Rnull!{x"),
                  (room ? room->areaName().c_str() : "") );
-
-        ch->send_to( buf );
     }
 }
 

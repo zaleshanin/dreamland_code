@@ -2,6 +2,8 @@
  *
  * ruffina, 2004
  */
+#include <string.h>
+
 #include "wrapperbase.h"
 #include "register-impl.h"
 #include "lex.h"
@@ -20,7 +22,7 @@
 
 #include "loadsave.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "vnum.h"
 #include "def.h"
 #include "skill.h"

@@ -13,7 +13,7 @@
 #include "pcharacter.h"
 #include "dlfilestream.h"
 
-#include "mercdb.h"
+#include "merc.h"
 #include "def.h"
 
 static IconvMap utf2koi("utf-8", "koi8-r");
@@ -67,7 +67,7 @@ DLString AhennLanguage::createDictum( ) const
 
 void AhennLanguage::dream( const Word &word, PCharacter *ch ) const
 {
-    ch->printf( "Из звуков мелодии, древней, как сам мир, рождается слово {c%s{x.\r\n",
+    ch->pecho( "Из звуков мелодии, древней, как сам мир, рождается слово {c%s{x.",
                 word.toStr( ) );
 }
 

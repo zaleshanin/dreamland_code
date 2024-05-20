@@ -32,7 +32,7 @@
 #include "commandflags.h"
 #include "act.h"
 #include "comm.h"
-#include "mercdb.h"
+
 #include "def.h"
 
 GSN(garble);
@@ -977,7 +977,7 @@ CMD(skedit, 50, "", POS_DEAD, 103, LOG_ALWAYS, "Online skill editor.")
     // skedit list [all|active|passive|magic|prayer|<group>]
     if (arg_is_list(cmd)) {
         bool all = false, active = false, passive = false, magic = false, 
-             prayer = false, invalid = false, fenia = false;
+             prayer = false, invalid = false;
         SkillGroup *group = 0;
 
         if (!args.empty()) {
@@ -991,8 +991,6 @@ CMD(skedit, 50, "", POS_DEAD, 103, LOG_ALWAYS, "Online skill editor.")
                 magic = true;
             else if (arg_oneof(args, "prayer", "молитвы"))
                 prayer = true;
-            else if (arg_oneof(args, "fenia", "феня"))
-                fenia = true;
             else if (arg_oneof(args, "invalid"))
                 invalid = true;
             else {
@@ -1003,7 +1001,7 @@ CMD(skedit, 50, "", POS_DEAD, 103, LOG_ALWAYS, "Online skill editor.")
                 }
             }
         } else {
-            stc("Использование: skedit list [all|active|passive|magic|prayer|fenia|invalid|<group>]\r\n", ch);
+            stc("Использование: skedit list [all|active|passive|magic|prayer|invalid|<group>]\r\n", ch);
             return;
         }
 
@@ -1024,7 +1022,6 @@ CMD(skedit, 50, "", POS_DEAD, 103, LOG_ALWAYS, "Online skill editor.")
 
             if (   (active && !s->isPassive() && !isSpell)
                 || (passive && s->isPassive())
-                || (fenia && dynamic_cast<FeniaSkill *>(s))
                 || (magic && isSpell && spell->flags.isSet(SPELL_MAGIC))
                 || (prayer && isSpell && spell->flags.isSet(SPELL_PRAYER))
                 || (group && skill->hasGroup(group->getIndex())))
@@ -1034,9 +1031,9 @@ CMD(skedit, 50, "", POS_DEAD, 103, LOG_ALWAYS, "Online skill editor.")
         }
 
         ostringstream buf;
-        buf << dlprintf("{C%-20s %-4s %4s %4s %4s %1s %1s{x\r\n", "Имя", "Тип", "Мана", "Шаги", "Wait", "T", "F");
+        buf << fmt(0, "{C%-20s %-4s %4s %4s %4s %1s %1s{x\r\n", "Имя", "Тип", "Мана", "Шаги", "Wait", "T", "F");
         const DLString lineFormat = 
-            web_cmd(ch, "skedit $1", "%-20s") + " %-4s %4d %4d %4d %1s %1s{x\r\n";
+            "{W" + web_cmd(ch, "skedit $1", "%-20s") + "{w %-4s %4d %4d %4d %1s %1s{x\r\n";
 
         for (auto &s: skills) {
             DefaultSpell::Pointer spell = s->getSpell().getDynamicPointer<DefaultSpell>();
@@ -1059,7 +1056,7 @@ CMD(skedit, 50, "", POS_DEAD, 103, LOG_ALWAYS, "Online skill editor.")
                     fenia = true;
             }
             
-            buf << dlprintf(
+            buf << fmt(0, 
                     lineFormat.c_str(),
                     s->getName().c_str(),
                     type.c_str(),
@@ -1079,13 +1076,13 @@ CMD(skedit, 50, "", POS_DEAD, 103, LOG_ALWAYS, "Online skill editor.")
 
     int sn = skillManager->unstrictLookup(arg, 0);        
     if (sn < 0) {
-        ch->printf("Умение '%s' не найдено.\r\n", arg.c_str());
+        ch->pecho("Умение '%s' не найдено.", arg.c_str());
         return;
     }
 
     Skill *skill = skillManager->find(sn);
     if (!dynamic_cast<BasicSkill *>(skill)) {
-        ch->printf("Умение '%s' невозможно отредактировать.\r\n", skill->getName().c_str());
+        ch->pecho("Умение '%s' невозможно отредактировать.", skill->getName().c_str());
         return;
     }
     
@@ -1108,12 +1105,12 @@ CMD(gredit, 50, "", POS_DEAD, 103, LOG_ALWAYS, "Online skill group editor.")
 
     SkillGroup *group = skillGroupManager->findUnstrict(arg);
     if (!group) {
-        ch->printf("Группа умений '%s' не найдена.\r\n", arg.c_str());
+        ch->pecho("Группа умений '%s' не найдена.", arg.c_str());
         return;
     }
 
     if (!dynamic_cast<DefaultSkillGroup *>(group)) {
-        ch->printf("Группу '%s' невозможно отредактировать.\r\n", group->getName().c_str());
+        ch->pecho("Группу '%s' невозможно отредактировать.", group->getName().c_str());
         return;
     }
     

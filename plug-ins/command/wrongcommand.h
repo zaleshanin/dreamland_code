@@ -5,10 +5,10 @@
 #ifndef __WRONGCOMMAND_H__
 #define __WRONGCOMMAND_H__
 
-#include "defaultcommand.h"
 #include "commandplugin.h"
 
-class WrongCommand : public DefaultCommand, public CommandPlugin {
+
+class WrongCommand : public CommandPlugin {
 XML_OBJECT
 public:
     typedef ::Pointer<WrongCommand> Pointer;

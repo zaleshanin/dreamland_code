@@ -26,9 +26,8 @@
 #include "npcharacter.h"
 #include "pcharacter.h"
 #include "race.h"
-
+#include "merc.h"
 #include "dreamland.h"
-#include "mercdb.h"
 #include "def.h"
 
 GSN(mirror);
@@ -47,7 +46,6 @@ NPCharacter::NPCharacter( ) :
 
 NPCharacter::~NPCharacter( )
 {
-    mobile_count--;
 }
 
 /****************************************************************************
@@ -155,42 +153,6 @@ void NPCharacter::setShortDescr( const DLString& d )
 void NPCharacter::setLongDescr( const DLString& d )
 {
     setLongDescr( d.c_str( ) );
-}
-
-void NPCharacter::fmtName( const char *fmt, ... )
-{
-    char buf[MAX_STRING_LENGTH];
-    va_list ap;
-
-    va_start( ap, fmt );
-    vsprintf( buf, fmt, ap );
-    va_end( ap );
-
-    setName( buf );
-}
-
-void NPCharacter::fmtShortDescr( const char *fmt, ... )
-{
-    char buf[MAX_STRING_LENGTH];
-    va_list ap;
-
-    va_start( ap, fmt );
-    vsprintf( buf, fmt, ap );
-    va_end( ap );
-
-    setShortDescr( buf );
-}
-
-void NPCharacter::fmtLongDescr( const char *fmt, ... )
-{
-    char buf[MAX_STRING_LENGTH];
-    va_list ap;
-
-    va_start( ap, fmt );
-    vsprintf( buf, fmt, ap );
-    va_end( ap );
-
-    setLongDescr( buf );
 }
 
 /*****************************************************************************

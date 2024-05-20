@@ -12,7 +12,6 @@
 
 #include "xmlglobalbitvector.h"
 #include "commandplugin.h"
-#include "defaultcommand.h"
 
 class KnightOrder : public ClanOrder {
 XML_OBJECT
@@ -63,7 +62,7 @@ protected:
 };
 
 
-class COrden : public CommandPlugin, public DefaultCommand {
+class COrden : public CommandPlugin {
 public:
     typedef ::Pointer<COrden> Pointer;
 

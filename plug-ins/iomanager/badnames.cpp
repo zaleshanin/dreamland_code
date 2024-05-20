@@ -2,10 +2,12 @@
  *
  * ruffina, 2004
  */
+#include <string.h>
+
 #include "badnames.h"
 #include "logstream.h"
 #include "dl_ctype.h"
-#include "mercdb.h"
+
 #include "merc.h"
 #include "loadsave.h"
 #include "religion.h"

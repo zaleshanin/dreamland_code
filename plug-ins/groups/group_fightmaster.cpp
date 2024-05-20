@@ -23,7 +23,7 @@
 #include "affect.h"
 #include "commonattributes.h"
 
-#include "mercdb.h"
+
 #include "npcharacter.h"
 #include "object.h"
 #include "pcharacter.h"
@@ -40,7 +40,7 @@
 #include "magic.h"
 #include "material.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "morphology.h"
 #include "onehit.h"
 #include "onehit_weapon.h"
@@ -67,6 +67,7 @@ GSN(shield_block);
 GSN(cross_block);
 GSN(dodge);
 GSN(trip);
+GSN(slice);
 CLAN(shalafi);
 PROF(anti_paladin);
 PROF(samurai);
@@ -74,6 +75,8 @@ PROF(warrior);
 PROF(paladin);
 PROF(ninja);
 PROF(thief);
+WEARLOC(tat_wrist_l);
+WEARLOC(tat_wrist_r);
 
 static auto needsSpam = [](Character *target) {
     return target->getPC() 
@@ -589,3 +592,9 @@ SKILL_APPLY(crossblock)
  * 'dodge' skill command
  */
 SKILL_DECL(dodge);
+
+
+/*
+ * 'slice' skill command
+ */
+SKILL_DECL(slice);

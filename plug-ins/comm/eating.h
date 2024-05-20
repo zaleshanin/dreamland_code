@@ -6,11 +6,10 @@
 #define EATING_H
 
 #include "commandplugin.h"
-#include "defaultcommand.h"
 
 class NPCharacter;
 
-class CEat : public CommandPlugin, public DefaultCommand {
+class CEat : public CommandPlugin {
 XML_OBJECT
 public:
     typedef ::Pointer<CEat> Pointer;

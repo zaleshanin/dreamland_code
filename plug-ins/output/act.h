@@ -47,8 +47,6 @@ void oldact_p( const char *format, Character *ch,
 DLString fmt(Character *to, const char *fmt, ...);
 DLString vfmt(Character *to, const char *format, va_list av);
 
-DLString dlprintf( const char *, ... );
-
 /*--------------------------------------------------------------------------
  * tell-like output 
  *--------------------------------------------------------------------------*/
@@ -69,5 +67,9 @@ void echo_master(Character *ch, const char *format, ...);
 void echo_char(Character *ch, bool (Character *), const char *format, ...);
 void echo_room(Character *ch, bool (Character *), const char *format, ...);
 void echo_notvict(Character *ch, Character *victim, bool (Character *), const char *format, ...);
+
+
+/** Output given list of values in N columns of particular width. */
+DLString print_columns(const list<DLString> &names, int width, int columns);
 
 #endif

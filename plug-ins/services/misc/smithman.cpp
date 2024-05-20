@@ -16,7 +16,7 @@
 #include "npcharacter.h"
 
 #include "merc.h"
-#include "mercdb.h"
+
 #include "interp.h"
 #include "handler.h"
 #include "arg_utils.h"
@@ -119,7 +119,7 @@ void SmithService::printLine( Character *client,
     
     price->toStream( client, mbuf );
 
-    buf << dlprintf( "%9s.....{c%-9s{x - %s\r\n",
+    buf << fmt(0, "%9s.....{c%-9s{x - %s\r\n",
                      mbuf.str( ).c_str( ),
                      name.c_str( ),
                      descr.c_str( ) );

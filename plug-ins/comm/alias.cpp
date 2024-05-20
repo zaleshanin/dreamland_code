@@ -4,6 +4,7 @@
  */
 
 #include <sstream>
+#include <string.h>
 
 #include "logstream.h"
 
@@ -15,7 +16,6 @@
 #include "interpretlayer.h"
 #include "commandinterpreter.h"
 #include "commandplugin.h"
-#include "defaultcommand.h"
 
 #include "xmlattribute.h"
 #include "xmlattributeplugin.h"
@@ -27,7 +27,7 @@
 #include "descriptor.h"
 #include "loadsave.h"
 #include "comm.h"
-#include "mercdb.h"
+
 #include "def.h"
 
 /*-----------------------------------------------------------------------------
@@ -52,7 +52,7 @@ const DLString XMLAttributeAliases::TYPE = "XMLAttributeAliases";
 /*-----------------------------------------------------------------------------
  * SkippingCommand
  *----------------------------------------------------------------------------*/
-class SkippingCommand : public InterpretLayer, public CommandPlugin, public DefaultCommand 
+class SkippingCommand : public InterpretLayer, public CommandPlugin
 {
 public:
 
@@ -142,7 +142,7 @@ public:
             i = aliases->find( arg );
             
             if (i != aliases->end( ))
-                pch->printf( "%s означает '%s{x'.\r\n", arg.c_str( ), i->second.getValue( ).c_str( ) );
+                pch->pecho( "%s означает '%s{x'.", arg.c_str( ), i->second.getValue( ).c_str( ) );
             else
                 pch->pecho("Этот синоним не задан.");
 
@@ -162,20 +162,20 @@ public:
         if (i != aliases->end( )) // redefine an alias
         {
             i->second.setValue( argument );
-            pch->printf( "%s меняет свое значение на '%s{x'.\r\n", arg.c_str( ), argument.c_str( ) );
+            pch->pecho( "%s меняет свое значение на '%s{x'.", arg.c_str( ), argument.c_str( ) );
             return;
         }
 
         if (aliases->size( ) >= MAX_ALIASES)
         {
-            pch->printf( "Извините, Вы превысили лимит синонимов (%d).\n\r", MAX_ALIASES );
+            pch->pecho( "Извините, Вы превысили лимит синонимов (%d).", MAX_ALIASES );
             return;
         }
 
         // make a new alias
         (**aliases) [arg] = argument;
 
-        pch->printf( "%s теперь будет означать '%s{x'.\r\n", arg.c_str( ), argument.c_str( ) );
+        pch->pecho( "%s теперь будет означать '%s{x'.", arg.c_str( ), argument.c_str( ) );
     }
 
 protected:
@@ -319,8 +319,6 @@ public:
 
     virtual void run( Character *ch, const DLString &argument )
     {
-        char buf[MAX_INPUT_LENGTH];
-        
         if (argument.empty( ))
         {
             if (ch->prefix[0] == '\0')
@@ -337,16 +335,15 @@ public:
 
         if (ch->prefix[0] != '\0')
         {
-            sprintf(buf,"Prefix changed to %s.\r\n",argument.c_str( ));
+            ch->pecho("Prefix changed to %s.",argument.c_str( ));
             free_string(ch->prefix);
         }
         else
         {
-            sprintf(buf,"Prefix set to %s.\r\n",argument.c_str( ));
+            ch->pecho("Prefix set to %s.",argument.c_str( ));
         }
 
         ch->prefix = str_dup(argument.c_str( ));
-        ch->send_to( buf );
     }
 
 protected:
@@ -434,7 +431,7 @@ public:
         iargs.splitLine();
 
         if (ch->isCoder())
-            ch->printf("Отладка: результат замены %s (%s).\r\n", iargs.cmdName.c_str(), iargs.cmdArgs.c_str());
+            ch->pecho("Отладка: результат замены %s (%s).", iargs.cmdName.c_str(), iargs.cmdArgs.c_str());
         
         return true;
     }

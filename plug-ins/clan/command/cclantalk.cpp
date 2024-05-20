@@ -13,6 +13,7 @@
  *    и все остальные, кто советовал и играл в этот MUD                    *
  ***************************************************************************/
 
+#include <string.h>
 
 #include "cclantalk.h"
 #include "commandtemplate.h"
@@ -28,7 +29,7 @@
 #include "descriptor.h"
 #include "mudtags.h"
 #include "act.h"
-#include "mercdb.h"
+
 #include "merc.h"
 #include "def.h"
 
@@ -161,19 +162,14 @@ bool CClanTalk::visible( Character *ch ) const
     return ch->getClan( ) != clan_none;
 }
 
-void clantalk( Clan &clan, const char *format, ... )
+void clantalk( Clan &clan, const DLString &message )
 {
     va_list ap;
-    char msg[MAX_STRING_LENGTH];
     ostringstream buf;
     
-    va_start( ap, format );
-    vsprintf( msg, format, ap );
-    va_end( ap );
-
     buf << "{" << clan.getColor( ) 
         << "[" << clan.getShortName( ) << "] : "
-        << msg << "{x" << endl;
+        << message << "{x" << endl;
 
     for (Descriptor *d = descriptor_list; d != 0; d = d->next) 
         if (d->connected == CON_PLAYING

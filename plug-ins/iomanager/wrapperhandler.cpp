@@ -2,6 +2,8 @@
  *
  * ruffina, 2004
  */
+#include <string.h>
+
 #include "logstream.h"
 #include "wrapperhandler.h"
 #include "nannyhandler.h"
@@ -9,7 +11,7 @@
 #include "ban.h"
 #include "comm.h"
 
-#include "mercdb.h"
+
 #include "def.h"
 
 void WrapperHandler::init( Descriptor *d ) 

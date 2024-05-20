@@ -18,7 +18,7 @@
 #include "race.h"
 
 #include "merc.h"
-#include "mercdb.h"
+
 #include "def.h"
 
 WEARLOC(none);
@@ -162,6 +162,8 @@ static Flags & char_flag_by_table(Character *ch, const FlagTable *table)
         return ch->detection;
     else if (table == &form_flags)
         return ch->form;
+    else if (table == &part_flags)
+        return ch->parts;    
 
     return zeroFlags;
 }
@@ -182,6 +184,8 @@ static const Flags & race_flag_by_table(const Race *race, const FlagTable *table
         return race->getDet();
     else if (table == &form_flags)
         return race->getForm();
+    else if (table == &part_flags)
+        return race->getParts();    
 
     return Flags::emptyFlags;
 }
@@ -195,7 +199,15 @@ void affect_modify( Character *ch, Affect *paf, bool fAdd )
     const FlagTable *table = paf->bitvector.getTable();
 
     if (table) {
-        char_flag_by_table(ch, table).changeBit(paf->bitvector, fAdd);
+        bool action = fAdd;
+
+        if (table == &part_flags && paf->location == APPLY_BITVECTOR) {
+            // allow affects that remove a bit, but only for one table for now
+            if (paf->modifier < 0)
+                action = !fAdd;
+        }
+
+        char_flag_by_table(ch, table).changeBit(paf->bitvector, action);
     }
 
     if (paf->global.getRegistry() == wearlocationManager) {
@@ -268,6 +280,9 @@ void affect_modify( Character *ch, Affect *paf, bool fAdd )
             ch->getPC()->mod_level_spell += mod;
         }
         break;
+    case APPLY_BITVECTOR:
+        /* no action */
+        break;
     }
 }
 
@@ -280,8 +295,12 @@ static void affectlist_reapply(AffectList &afflist, Character *ch, Affect *affec
     int bits = affect->bitvector.getValue();
 
     for (auto &paf : afflist)
-        if (paf->bitvector.getTable() == table && paf->bitvector.isSet(bits))
-            charFlag.setBit(paf->bitvector);
+        if (paf->bitvector.getTable() == table && paf->bitvector.isSet(bits)) {
+            if (table == &part_flags && paf->location == APPLY_BITVECTOR && paf->modifier < 0)
+                charFlag.removeBit(paf->bitvector);
+            else
+                charFlag.setBit(paf->bitvector);
+        }
         else if (paf->global.getRegistry() == registry) {
             if (registry == wearlocationManager)
                 ch->wearloc.remove(paf->global);
@@ -308,7 +327,7 @@ void affect_check(Character *ch, Affect *affect)
         affectlist_reapply(obj->pIndexData->affected, ch, affect);
     }
 
-    if (table) {    
+    if (table && table != &part_flags) {    
         const Flags &raceFlag = race_flag_by_table(ch->getRace().getElement(), table);
         Flags &charFlag = char_flag_by_table(ch, table);
         charFlag.setBit(raceFlag.getValue());
@@ -473,6 +492,7 @@ const FlagTable * affect_where_to_table(int where)
     case TO_FORM: return &form_flags;
     case TO_ROOM_AFFECTS: return &raffect_flags;
     case TO_ROOM_FLAGS: return &room_flags;
+    case TO_PART: return &part_flags;
     default: return 0;
     }
 }
@@ -496,6 +516,7 @@ int affect_table_to_where(const FlagTable *table, const GlobalRegistryBase *regi
     if (table == &form_flags) return TO_FORM;
     if (table == &raffect_flags) return TO_ROOM_AFFECTS;
     if (table == &room_flags) return TO_ROOM_FLAGS;
+    if (table == &part_flags) return TO_PART;
 
     return 0;
 }

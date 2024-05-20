@@ -7,13 +7,12 @@
 #define PRACTICE_H
 
 #include "commandplugin.h"
-#include "defaultcommand.h"
 
 class PCharacter;
 class NPCharacter;
 class Skill;
 
-class CPractice : public CommandPlugin, public DefaultCommand {
+class CPractice : public CommandPlugin {
 public:
         typedef ::Pointer<CPractice> Pointer;
     

@@ -20,7 +20,7 @@
 #include "wrapperbase.h"
 #include "register-impl.h"
 #include "lex.h"
-#include "char.h"
+
 #include "grammar_entities_impl.h"
 
 #include "morphology.h"
@@ -58,7 +58,7 @@
 #include "../anatolia/handler.h"
 #include "act.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "def.h"
 
 #define MILD(ch)     (IS_SET((ch)->comm, COMM_MILDCOLOR))
@@ -363,7 +363,6 @@ void show_pockets_to_char( Object *container, Character *ch, ostringstream &buf 
  */
 void show_list_to_char( Object *list, Character *ch, bool fShort, bool fShowNothing, DLString pocket, Object *container )
 {
-    char buf[MAX_STRING_LENGTH];
     ostringstream output;
     bool fCombine, fConfigCombine;
     map<DLString, int> dups;
@@ -457,8 +456,7 @@ void show_list_to_char( Object *list, Character *ch, bool fShort, bool fShowNoth
             d = dups.find( *sd );
 
             if (fConfigCombine && d->second != 1) {
-                sprintf( buf, "(%2d) ", d->second );
-                output << buf;
+                output << fmt(0, "(%2d) ", d->second);
             }
             else
                 output << "     ";
@@ -1053,7 +1051,7 @@ bool show_char_equip( Character *ch, Character *victim, ostringstream &buf, bool
         else
             mbuf << objName;
 
-        buf << dlprintf( "<%-21s> %s\r\n", wearName.c_str( ), mbuf.str( ).c_str( ) );
+        buf << fmt(0, "<%-21s> %s\r\n", wearName.c_str( ), mbuf.str( ).c_str( ) );
         if (obj)
             naked = false;
     }
@@ -1094,7 +1092,7 @@ void show_people_to_char( Character *list, Character *ch, bool fShowMount )
     }
 
     if (life_count && CAN_DETECT(ch, DETECT_LIFE))
-        ch->printf( "Ты чувствуешь присутствие %d жизненн%s форм%s в комнате.\n\r",
+        ch->pecho( "Ты чувствуешь присутствие %d жизненн%s форм%s в комнате.",
                     life_count,
                     GET_COUNT(life_count, "ой", "ых", "ых"),
                     GET_COUNT(life_count, "ы", "", ""));
@@ -1335,7 +1333,7 @@ static void do_look_move( Character *ch, bool fBrief )
         if (eyes_darkened( ch ))
             ch->pecho( "Здесь слишком темно... " );
         else
-            ch->printf( "{W%s{x\r\n", ch->in_room->getName() );
+            ch->pecho( "{W%s{x", ch->in_room->getName() );
         return;
     }
 
@@ -1671,23 +1669,23 @@ static bool oprog_examine_money( Object *obj, Character *ch, const DLString& )
     if (obj->value0() == 0)
     {
         if (obj->value1() == 0)
-                ch->printf("Жаль, но здесь нет золота.\n\r");
+                ch->pecho("Жаль, но здесь нет золота.");
         else if (obj->value1() == 1)
-                ch->printf("Ух ты! Одна золотая монетка!\n\r");
+                ch->pecho("Ух ты! Одна золотая монетка!");
         else
-                ch->printf("Здесь %d золот%s.\n\r",
+                ch->pecho("Здесь %d золот%s.",
                         obj->value1(),GET_COUNT(obj->value1(), "ая монета","ые монеты","ых монет"));
     }
     else if (obj->value1() == 0)
     {
         if (obj->value0() == 1)
-                ch->printf("Ух ты! Одна серебряная монетка.\n\r");
+                ch->pecho("Ух ты! Одна серебряная монетка.");
         else
-                ch->printf("Здесь %d серебрян%s.\n\r",
+                ch->pecho("Здесь %d серебрян%s.",
                         obj->value0(),GET_COUNT(obj->value0(), "ая монета","ые монеты","ых монет"));
     }
     else
-        ch->printf("Здесь %d золот%s и %d серебрян%s.\n\r",
+        ch->pecho("Здесь %d золот%s и %d серебрян%s.",
                 obj->value1(),GET_COUNT(obj->value1(), "ая","ые","ых"),
                 obj->value0(),GET_COUNT(obj->value0(), "ая монета","ые монеты","ых монет"));
     return true;
@@ -1705,7 +1703,7 @@ static bool oprog_examine_drink_container( Object *obj, Character *ch, const DLS
         return true;
     }
 
-    ch->printf( "%s наполнен жидкостью %s цвета.\n\r",
+    ch->pecho( "%s наполнен жидкостью %s цвета.",
                 obj->value1() < obj->value0() / 4 ? 
                     "Меньше, чем до половины" :
                     obj->value1() < 3 * obj->value0() / 4 ? 

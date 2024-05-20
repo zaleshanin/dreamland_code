@@ -22,13 +22,11 @@ struct alignment_t {
 extern const struct alignment_t alignment_table [];
 
 DLString align_name_for_range( int min, int max );
-int      align_choose_allowed( PCharacter *, int n );
-int      align_choose_allowed( PCharacter *, const DLString& );
-void     align_print_allowed( PCharacter *, ostringstream & );
 DLString align_name( Character * );
 DLString align_max( PCharacter * );
 DLString align_min( PCharacter * );
 const char *align_name_short(Character *ch, const Grammar::MultiGender &g);
+void align_get_ranges( PCharacter *ch, int &a_min, int &a_max );
 
 #define ALIGN_ERROR 0xffff
 

@@ -73,23 +73,32 @@ get_wrapper(Scripting::Object *obj)
 
 void WrapperBase::postpone( Register id, const char *fmt, ... )
 {
-    RegisterList progArgs;
-    Register progFun;
     va_list ap;
 
-    if (!triggerFunction(id, progFun))
-        return;
-    
     va_start(ap, fmt);
-    triggerArgs(progArgs, fmt, ap);
+    vpostpone(id, fmt, ap);
     va_end(ap);
-
-    postpone(progFun, progArgs);
 }
 
-void WrapperBase::postpone(const Register &progFun, const RegisterList &progArgs)
+bool WrapperBase::vpostpone( Register id, const char *fmt, va_list ap)
+{
+    RegisterList progArgs;
+    Register progFun;
+
+    if (!triggerFunction(id, progFun))
+        return false;
+    
+    triggerArgs(progArgs, fmt, ap);
+
+    postpone(id, progFun, progArgs);
+    return true;
+}
+
+
+void WrapperBase::postpone(const Register &progName, const Register &progFun, const RegisterList &progArgs)
 {
     FeniaProcess::Pointer fp(NEW);
+    fp->name = progName.toString();
     fp->args.assign(progArgs.begin(), progArgs.end());
     fp->thiz = Register(self);
     fp->fun = progFun;
@@ -114,6 +123,19 @@ WrapperBase::call( Register id, const char *fmt, ... )
     va_end(ap);
 
     return success && rc.type != Register::NONE && rc.toBoolean();
+}
+
+bool WrapperBase::call(Register &rc, const Register &progName, const Register &progFun, const RegisterList &progArgs)
+{
+    try {
+        rc = progFun.toFunction()->invoke(Register(self), progArgs);
+        return true;
+
+    } catch (const Scripting::Exception &e) {
+        FeniaManager::getThis()->croak(this, progName, e);
+    }
+
+    return false;
 }
 
 void WrapperBase::triggerArgs( RegisterList &regList, const char *fmt, va_list ap )
@@ -142,6 +164,12 @@ void WrapperBase::triggerArgs( RegisterList &regList, const char *fmt, va_list a
                     FeniaManager::wrapperManager->getWrapper( 
                             va_arg( ap, Affect* ) ) );
             break;
+
+        case 'Q':
+            regList.push_back(
+                    FeniaManager::wrapperManager->getWrapper(
+                            va_arg(ap, AreaQuest *) ) );
+            break;                    
 
         case 's':
             regList.push_back( Register( va_arg( ap, char * ) ) );
@@ -186,23 +214,14 @@ bool WrapperBase::triggerFunction(const Register &key, Register &prog) const
 bool 
 WrapperBase::vcall( Register &rc, const Register &key, const char *fmt, va_list ap )
 {
-    RegisterList regList;
-    Register prog;
+    RegisterList progArgs;
+    Register progFun;
 
-    if (!triggerFunction(key, prog))
+    if (!triggerFunction(key, progFun))
         return false;
 
-    triggerArgs(regList, fmt, ap);
-
-    try {
-        rc = prog.toFunction( )->invoke( Register( self ), regList );
-        return true;
-
-    } catch (const Scripting::Exception &e) {
-        FeniaManager::getThis()->croak(this, key, e);
-    }
-
-    return false;
+    triggerArgs(progArgs, fmt, ap);
+    return call(rc, key, progFun, progArgs);
 }
 
 bool WrapperBase::numberCall( Register id, int &result, const char *fmt, ... )

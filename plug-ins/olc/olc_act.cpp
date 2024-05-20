@@ -32,7 +32,7 @@
 #include "act.h"
 #include "interp.h"
 
-#include "mercdb.h"
+
 
 #include "olc.h"
 #include "loadsave.h"
@@ -72,6 +72,7 @@ const struct olc_help_type help_table[] =
 {
     {"{YАрии{x", NULL, NULL, NULL },
     {"area_flags", &area_flags, "Флаги арий (поле area_flag)"},
+    {"areaquest_flags", &areaquest_flags, "Флаги арийных квестов (поле flags)"},
 
     {"{YКомнаты{x", NULL, NULL, NULL},
     {"room_flags", &room_flags, "Флаги комнат (поле room_flags)."},
@@ -125,7 +126,7 @@ const struct olc_help_type help_table[] =
     {"affwhere_flags", &affwhere_flags, "Поле where у аффекта (на что влияет его bitvector)"},
     {"wearloc", &wearloc_table, "Куда мобы одевают предметы."},
 
-    {"{YУмения и заклинания{x", NULL, NULL, NULL}, 
+    {"{YУмения и команды{x", NULL, NULL, NULL}, 
     {"spells", &skill_table, "Имена всех заклинаний."},
     {"practicer", &group_table, "Все группы умений (для поля practicer)."},
     {"target_table", &target_table, "Цели для заклинаний (поле target)."},
@@ -134,7 +135,8 @@ const struct olc_help_type help_table[] =
     {"order_flags", &order_flags, "Флаги приказов (поле order)."},
     {"damage_table", &damage_table, "Виды повреждений (поле damtype)."},
     {"damage_flags", &damage_flags, "Флаги урона (поле damflags)."},
-    {"command_flags", &command_flags, "Флаги для команды."},
+    {"command_flags", &command_flags, "Флаги для команды (поле extra)."},
+    {"command_category_flags", &command_category_flags, "Категории команды (поле cat)"},
     {"argtype_table", &argtype_table, "Тип аргумента для команды умения (поле argtype)."},
 
     {NULL, NULL, NULL, NULL}
@@ -162,7 +164,7 @@ void show_flag_cmds(Character * ch, const FlagTable *table)
    
     const FlagTable::Field * f = table->fields; 
     for (int i = 0; i < table->size; i++)
-        buf << dlprintf("{g%-15s{x: %s", 
+        buf << fmt(0, "{g%-15s{x: %s", 
                         f[i].name, 
                        (f[i].message ? russian_case(f[i].message, '1').c_str() : ""))
             << endl;
@@ -202,25 +204,22 @@ void show_skills(Character *ch, int target)
 
 void show_spec_cmds(Character * ch)
 {
-    char buf[MAX_STRING_LENGTH];
-    char buf1[MAX_STRING_LENGTH];
+    ostringstream buf;
     int spec;
     int col;
 
-    buf1[0] = '\0';
     col = 0;
     stc("Все специальные функции начинаются с 'spec_'\n\r\n\r", ch);
     for (spec = 0; spec_table[spec].function != NULL; spec++) {
-        sprintf(buf, "%-19s", &spec_table[spec].name[5]);
-        strcat(buf1, buf);
+        buf << fmt(0, "%-19s", &spec_table[spec].name[5]);
         if (++col % 4 == 0)
-            strcat(buf1, "\n\r");
+            buf << endl;
     }
 
     if (col % 4 != 0)
-        strcat(buf1, "\n\r");
+        buf << endl;
 
-    stc(buf1, ch);
+    ch->send_to(buf);
 }
 
 void show_liq_cmds(Character * ch)
@@ -233,15 +232,15 @@ void show_liq_cmds(Character * ch)
     for (int l = 0; l < liquidManager->size( ); l++) {
         liq = liquidManager->find( l );
         
-        buf << dlprintf( "%-18s %-18s %-14s ",
+        buf << fmt(0, "%-18s %-18s %-14s ",
                   liq->getName( ).c_str( ),
                   liq->getShortDescr( ).ruscase( '1' ).c_str( ),
                   liq->getColor( ).ruscase( '1' ).c_str( ) );
 
         for (int i = 0; i < desireManager->size( ); i++)
-            buf << dlprintf("%3d ", liq->getDesires( )[i] );
+            buf << fmt(0, "%3d ", liq->getDesires( )[i] );
                             
-        buf << dlprintf( "%3d\r\n", liq->getSipSize( ) );
+        buf << fmt(0, "%3d\r\n", liq->getSipSize( ) );
     }
 
     page_to_char(buf.str( ).c_str( ), ch);
@@ -265,7 +264,7 @@ bool show_help(Character * ch, const char *cargument)
         buf << "Таблица             : Пояснение" << endl;
         for (cnt = 0; help_table[cnt].command != NULL; cnt++) {
             if (help_table[cnt].desc)
-                buf << dlprintf("{g%-19s{x: %s", help_table[cnt].command, help_table[cnt].desc) << endl;
+                buf << fmt(0, "{g%-19s{x: %s", help_table[cnt].command, help_table[cnt].desc) << endl;
             else
                 buf << help_table[cnt].command << endl;
         }
@@ -288,7 +287,7 @@ bool show_help(Character * ch, const char *cargument)
             else if (help_table[cnt].structure == &wearloc_table) {
                 for (int i = 0; i < wearlocationManager->size( ); i++) {
                     Wearlocation *w = wearlocationManager->find( i );
-                    ch->printf( "{g%-14s{x: %s\r\n", 
+                    ch->pecho( "{g%-14s{x: %s", 
                                 w->getName().c_str(), w->getPurpose().c_str() );
                 }
                 return false;

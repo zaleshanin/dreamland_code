@@ -7,11 +7,10 @@
 #define DIVORCE_H
 
 #include "commandplugin.h"
-#include "defaultcommand.h"
 
 class PCharacter;
 
-class Divorce : public CommandPlugin, public DefaultCommand {
+class Divorce : public CommandPlugin {
 public:
         typedef ::Pointer<Divorce> Pointer;
     

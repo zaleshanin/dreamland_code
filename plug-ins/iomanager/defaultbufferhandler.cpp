@@ -3,6 +3,7 @@
  * ruffina, 2004
  */
 #include <iconv.h>
+#include <string.h>
 
 #include "defaultbufferhandler.h"
 #include "logstream.h"
@@ -13,7 +14,7 @@
 #include "wiznet.h"
 #include "telnet.h"
 #include "codepage.h"
-#include "mercdb.h"
+
 #include "colour.h"
 #include "def.h"
 

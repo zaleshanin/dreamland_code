@@ -10,14 +10,17 @@
 #include "defaultaffecthandler.h"
 #include "defaultskillcommand.h"
 #include "feniaskillaction.h"
+#include "wrappedcommand.h"
 #include "websocketrpc.h"
 #include "dlfileloader.h"
 #include "pcharacter.h"
 #include "room.h"
 #include "descriptor.h"
 #include "damageflags.h"
+#include "arg_utils.h"
+#include "areaquestutils.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "act.h"
 #include "def.h"
 
@@ -47,6 +50,9 @@ void FeniaTriggerLoader::initialization()
     loadFolder("spell");
     loadFolder("affect");
     loadFolder("skillcommand");
+    loadFolder("command");
+    loadFolder("queststep");
+    loadFolder("areaquest");
 }
 
 void FeniaTriggerLoader::destruction()
@@ -54,6 +60,12 @@ void FeniaTriggerLoader::destruction()
 
 }
 
+// Populate index trigger map based of a content of fenia.examples subfolder.
+// Folder 'mob' with 'onGive', 'onGreet', 'onSpeech' triggers becomes
+// indexTriggers["mob"] = map of
+//     ["onGive"] = <file content>
+//     ["onGreet"] = <file content>
+//     ["onSpeech"] = <file content>
 void FeniaTriggerLoader::loadFolder(const DLString &indexType)
 {
     DLFileLoader loader(EXAMPLE_FOLDER + "/" + indexType, "");
@@ -69,6 +81,8 @@ void FeniaTriggerLoader::loadFolder(const DLString &indexType)
     }
 
     indexTriggers[indexType] = triggers;
+
+    LogStream::sendNotice() << "OLC Fenia loaded " << triggers.size() << " triggers of type " << indexType << endl;
 }
 
 // Return 'Use' for 'onUse' or 'postUse'.
@@ -226,18 +240,42 @@ void FeniaTriggerLoader::showTriggers(PCharacter *ch, WrapperBase *wrapper, cons
 }
 
 
-
-static Register get_wrapper_for_index_data(int vnum, const DLString &type)
+Register get_wrapper_for_index_data(int vnum, const DLString &type)
 {
     Register w;
+    
     if (type == "obj") {
-        w = WrapperManager::getThis()->getWrapper(get_obj_index(vnum));
+        OBJ_INDEX_DATA *pObj = get_obj_index(vnum);
+        if (pObj)
+            w = WrapperManager::getThis()->getWrapper(pObj);
+
     } else if (type == "room") {
-        w = WrapperManager::getThis()->getWrapper(get_room_instance(vnum));
+        Room *pRoom = get_room_instance(vnum);
+        if (pRoom)
+            w = WrapperManager::getThis()->getWrapper(pRoom);
+
     } else if (type == "mob") {
-        w = WrapperManager::getThis()->getWrapper(get_mob_index(vnum));
+        MOB_INDEX_DATA *pMob = get_mob_index(vnum);
+        if (pMob)
+            w = WrapperManager::getThis()->getWrapper(pMob);
     }
+
     return w;
+}
+
+Scripting::Register FeniaTriggerLoader::findMethodOnWrapper(Scripting::Register w, const DLString &methodName) const
+{
+    Scripting::Register retval;
+    if (w.type == Scripting::Register::NONE)
+        return retval;
+        
+    WrapperBase *base = get_wrapper(w.toObject());
+    if (!base)
+        return retval;
+
+    Scripting::IdRef methodId(methodName);
+    retval = base->getField(methodId);
+    return retval;
 }
 
 bool FeniaTriggerLoader::checkWebsock(Character *ch) const
@@ -270,6 +308,16 @@ bool FeniaTriggerLoader::openEditor(PCharacter *ch, XMLIndexData &indexData, con
     Scripting::IdRef methodId(methodName);
     Register retval = base->getField(methodId);
 
+    // fenia <trigName> clear
+    if (arg_is_clear(args)) {
+        if (feniaTriggers->clearTrigger(w.toObject(), methodName))
+            ch->pecho("Триггер %s успешно удален.\r\n", methodName.c_str());
+        else
+            ch->pecho("Триггер %s не найден.\r\n", methodName.c_str());        
+
+        return true;
+    }
+
     // Fenia field not found, try to open the editor with trigger example.
     if (retval.type == Register::NONE) {
         DLString trigType = triggerType(methodName);
@@ -285,7 +333,7 @@ bool FeniaTriggerLoader::openEditor(PCharacter *ch, XMLIndexData &indexData, con
 
         std::vector<DLString> parms(2);
         // Create codesource subject.
-        parms[0] = dlprintf("areas/%s/%s/%d.%s", 
+        parms[0] = fmt(0, "areas/%s/%s/%d.%s", 
                         indexData.getArea()->area_file->file_name, 
                         indexData.getIndexType(),
                         indexData.getVnum(),
@@ -302,7 +350,7 @@ bool FeniaTriggerLoader::openEditor(PCharacter *ch, XMLIndexData &indexData, con
 
         // Open the editor.
         ch->desc->writeWSCommand("cs_edit", parms);
-        ch->printf("Запускаю веб-редактор для нового сценария, триггер %s.\r\n", methodName.c_str());
+        ch->pecho("Запускаю веб-редактор для нового сценария, триггер %s.", methodName.c_str());
         return true;
     }
 
@@ -320,7 +368,7 @@ bool FeniaTriggerLoader::findExample(Character *ch, const DLString &methodName, 
 
     TriggerContent::const_iterator t = i->second.find(methodName);
     if (t == i->second.end()) {
-        ch->printf("Триггер %s не найден, проверьте написание или попросите богов добавить его.\r\n", methodName.c_str());
+        ch->pecho("Триггер %s не найден, проверьте написание или попросите богов добавить его.", methodName.c_str());
         return false;
     }
 
@@ -347,7 +395,7 @@ bool FeniaTriggerLoader::editExisting(Character *ch, Register &retval) const
 
     // Open the editor.
     ch->desc->writeWSCommand("cs_edit", parms);
-    ch->printf("Запускаю веб-редактор для сценария %s, строка %d.\r\n", csRef.source->name.c_str(), csRef.line);
+    ch->pecho("Запускаю веб-редактор для сценария %s, строка %d.", csRef.source->name.c_str(), csRef.line);
     return true;
 }
 
@@ -367,7 +415,7 @@ vector<DLString> FeniaTriggerLoader::createSkillActionParams(
     parms[1] = tmpl;
 
     // Create codesource subject.
-    parms[0] = dlprintf("%s/%s/%s",
+    parms[0] = fmt(0, "%s/%s/%s",
                     actionType.c_str(),
                     action->getSkill()->getName().c_str(),
                     methodName.c_str());   
@@ -375,6 +423,55 @@ vector<DLString> FeniaTriggerLoader::createSkillActionParams(
     return parms;
 }
 
+vector<DLString> FeniaTriggerLoader::createCommandParams(
+    Character *ch, WrappedCommand *cmd, const DLString &methodName) const
+{
+    std::vector<DLString> parms;
+    const DLString indexType = "command";
+
+    // Create codesource body with example code.
+    DLString tmpl;
+    if (!findExample(ch, methodName, indexType, tmpl))
+        return parms;
+
+    parms.resize(2);
+    tmpl.replaces("@name@", DLString("\"") + cmd->getName() + "\"");
+    tmpl.replaces("@trig@", methodName);
+    parms[1] = tmpl;
+
+    // Create codesource subject.
+    parms[0] = fmt(0, "%s/%s/%s",
+                    indexType.c_str(),
+                    cmd->getName().c_str(),
+                    methodName.c_str());   
+
+    return parms;
+}
+
+vector<DLString> FeniaTriggerLoader::createAreaQuestParams(
+        Character *ch, AreaQuest *q, const DLString &methodName) const
+{
+    std::vector<DLString> parms;
+    const DLString indexType = "areaquest";
+
+    // Create codesource body with example code.
+    DLString tmpl;
+    if (!findExample(ch, methodName, indexType, tmpl))
+        return parms;
+
+    parms.resize(2);
+    tmpl.replaces("@vnum@", q->vnum.toString());
+    tmpl.replaces("@trig@", methodName);
+    parms[1] = tmpl;
+
+    // Create codesource subject.
+    parms[0] = fmt(0, "%s/%s/%s",
+                    indexType.c_str(),
+                    q->vnum.toString().c_str(),
+                    methodName.c_str());   
+
+    return parms;
+}
 
 bool FeniaTriggerLoader::openEditor(PCharacter *ch, DefaultSpell *spell, const DLString &constArguments) const
 {
@@ -393,7 +490,7 @@ bool FeniaTriggerLoader::openEditor(PCharacter *ch, DefaultSpell *spell, const D
 
         // Open the editor.
         ch->desc->writeWSCommand("cs_edit", parms);
-        ch->printf("Запускаю веб-редактор для заклинания, триггер %s.\r\n", methodName.c_str());
+        ch->pecho("Запускаю веб-редактор для заклинания, триггер %s.", methodName.c_str());
         return true;
     }
 
@@ -417,7 +514,7 @@ bool FeniaTriggerLoader::openEditor(PCharacter *ch, DefaultAffectHandler *ah, co
 
         // Open the editor.
         ch->desc->writeWSCommand("cs_edit", parms);
-        ch->printf("Запускаю веб-редактор для аффекта, триггер %s.\r\n", methodName.c_str());
+        ch->pecho("Запускаю веб-редактор для аффекта, триггер %s.", methodName.c_str());
         return true;
     }
 
@@ -441,12 +538,160 @@ bool FeniaTriggerLoader::openEditor(PCharacter *ch, DefaultSkillCommand *cmd, co
 
         // Open the editor.
         ch->desc->writeWSCommand("cs_edit", parms);
-        ch->printf("Запускаю веб-редактор для команды, триггер %s.\r\n", methodName.c_str());
+        ch->pecho("Запускаю веб-редактор для команды, триггер %s.", methodName.c_str());
         return true;
     }
 
     return editExisting(ch, retval);
 }
     
+
+bool FeniaTriggerLoader::openEditor(PCharacter *ch, WrappedCommand *cmd, const DLString &constArguments) const
+{
+    if (!checkWebsock(ch))
+        return false;
+
+    DLString args = constArguments;
+    DLString methodName = args.getOneArgument();
+    Register retval = getMethodForName<WrappedCommand>(cmd, methodName);
+
+    // Fenia field not found, try to open the editor with trigger example.
+    if (retval.type == Register::NONE) {
+        vector<DLString> parms = createCommandParams(ch, cmd, methodName);
+        if (parms.empty())
+            return false;
+
+        // Open the editor.
+        ch->desc->writeWSCommand("cs_edit", parms);
+        ch->pecho("Запускаю веб-редактор для команды, триггер %s.", methodName.c_str());
+        return true;
+    }
+
+    return editExisting(ch, retval);
+}
+
+bool FeniaTriggerLoader::openEditor(PCharacter *ch, AreaQuest *q, const DLString &constArguments) const
+{
+    if (!checkWebsock(ch))
+        return false;
+
+    DLString args = constArguments;
+    DLString methodName = args.getOneArgument();
+    Register retval = getMethodForName<AreaQuest>(q, methodName);
+
+    // Fenia field not found, try to open the editor with trigger example.
+    if (retval.type == Register::NONE) {
+        vector<DLString> parms = createAreaQuestParams(ch, q, methodName);
+        if (parms.empty())
+            return false;
+
+        // Open the editor.
+        ch->desc->writeWSCommand("cs_edit", parms);
+        ch->pecho("Запускаю веб-редактор для квеста, триггер %s.", methodName.c_str());
+        return true;
+    }
+
+    return editExisting(ch, retval);
+}
+
+// For given step type (mob/obj/room) return a list of all triggers that begin with this
+// prefix, e.g. 'mob:onGreet', 'mob:onSpeech', with "mob:" prefix removed.
+StringSet FeniaTriggerLoader::getQuestTriggers(const DLString &stepType) const
+{
+    StringSet stepTriggers;
+    DLString trigPrefix = stepType + ":";
+
+    auto t = indexTriggers.find("queststep");
+    if (t == indexTriggers.end())
+        return stepTriggers;
+
+    for (auto &trig: t->second) {
+        const DLString &trigName = trig.first;
+        if (trigPrefix.strPrefix(trigName))
+            stepTriggers.insert(trigName.substr(trigPrefix.length()));
+    }
+
+    return stepTriggers;
+}
+
+vector<DLString> FeniaTriggerLoader::createQuestStepParams(
+    Character *ch, AreaQuest *q, const DLString &type, const DLString &vnum, const DLString &trigName, const Integer &s, const DLString &methodId) const
+{
+    std::vector<DLString> parms;
+    const DLString indexType = "queststep";
+    DLString methodName = type + ":" + trigName;
+
+    // Create codesource body with example code.
+    DLString tmpl;
+    if (!findExample(ch, methodName, indexType, tmpl))
+        return parms;
+
+    parms.resize(2);
+    tmpl.replaces("@vnum@", vnum);
+    tmpl.replaces("@trig@", methodId);
+    tmpl.replaces("@quest.vnum@", q->vnum.toString());
+    tmpl.replaces("@quest.step@", s.toString());
+    parms[1] = tmpl;
+
+    AreaIndexData *pArea;
+    if (type == "mob" && get_mob_index(vnum.toInt()))
+        pArea = get_mob_index(vnum.toInt())->area;
+    else if (type == "obj" && get_obj_index(vnum.toInt()))
+        pArea = get_obj_index(vnum.toInt())->area;
+    else if (type == "room" && get_room_index(vnum.toInt()))
+        pArea = get_room_index(vnum.toInt())->areaIndex;
+    else
+        return parms;
+
+    // Create codesource subject.
+    parms[0] = fmt(0, "areas/%s/%s/%s.%s", 
+                    pArea->area_file->file_name, 
+                    type.c_str(),
+                    vnum.c_str(),
+                    methodId.c_str());   
+
+    return parms;
+}
+
+bool FeniaTriggerLoader::openEditor(PCharacter *ch, AreaQuest *q, const Integer &s, bool isBegin, const DLString &constArguments) const
+{
+    const QuestStep::XMLPointer &thisStep = q->steps[s];
+    DLString type = isBegin ? thisStep->beginType : thisStep->endType;
+    DLString vnum = isBegin ? thisStep->beginValue : thisStep->endValue;
+    DLString trigName = isBegin ? thisStep->beginTrigger : thisStep->endTrigger;
+
+    DLString methodId = aquest_method_id(q, s, isBegin, trigName);
+    Register wrapper = get_wrapper_for_index_data(vnum.toInt(), type);
+    Register method = findMethodOnWrapper(wrapper, methodId);
+    DLString args = constArguments;
+
+    if (arg_is_clear(args)) {
+        if (feniaTriggers->clearTrigger(wrapper.toObject(), methodId))
+            ch->pecho("Триггер %s успешно удален.\r\n", methodId.c_str());
+        else
+            ch->pecho("Триггер %s не найден для удаления.\r\n", methodId.c_str());        
+
+        return true;
+    }
+
+    if (method.type == Register::NONE) {
+        // No trigger defined yet, create new from a template
+        vector<DLString> parms = createQuestStepParams(ch, q, type, vnum, trigName, s, methodId);
+        if (parms.empty())
+            return false;
+
+        // Open the editor.
+        ch->desc->writeWSCommand("cs_edit", parms);
+        ch->pecho("Запускаю веб-редактор для шага %d квеста %d, триггер %s.\r\n", 
+                    s.getValue(), q->vnum.getValue(), trigName.c_str());
+        return true;
+
+    } else {
+        // Open existing trigger as is
+        editExisting(ch, method);
+    }
+
+    return true;
+}
 
 PluginInitializer<FeniaTriggerLoader> initFeniaTriggerLoader;

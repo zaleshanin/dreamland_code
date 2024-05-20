@@ -47,7 +47,7 @@ public:
     virtual int properOrder( Character * ) const;
     virtual int dispatch( const InterpretArguments & );
     virtual int dispatchOrder( const InterpretArguments & );
-    virtual void run( Character *, const DLString & );
+    virtual void entryPoint( Character *, const DLString & );
 
 private:
     virtual void run( PCharacter *, char * ) = 0;
@@ -251,7 +251,7 @@ bool OLCState::globalBitvectorEdit(GlobalBitvector &field)
             elem = registry->findUnstrict(v);
 
         if (!elem) {
-            ch->printf("Значение '%s' не найдено.\r\n", args.c_str());
+            ch->pecho("Значение '%s' не найдено.", args.c_str());
             return false;
         }
 
@@ -260,7 +260,7 @@ bool OLCState::globalBitvectorEdit(GlobalBitvector &field)
 
     field.clear();
     field.set(newField);
-    ch->printf("Новое значение: {g%s{x\r\n", field.toString().c_str());
+    ch->pecho("Новое значение: {g%s{x", field.toString().c_str());
     return true;    
 }
 

@@ -8,6 +8,7 @@
 #include "dlfilestream.h"
 #include "codesource.h"
 #include "fenia/register-impl.h"
+#include "dl_ctype.h"
 #include "dreamland.h"
 
 using namespace Scripting;
@@ -32,6 +33,8 @@ CodeSourceRepo::CodeSourceRepo()
     subjPatterns.push_back(
         RegExp::Pointer(NEW, "^(skillcommand/[a-z ]{2,})/([a-zA-Z]+)$", true));
     subjPatterns.push_back(
+        RegExp::Pointer(NEW, "^(command/[a-z ]{2,})/([a-zA-Z]+)$", true));
+    subjPatterns.push_back(
         RegExp::Pointer(NEW, "^(areas/[-a-z0-9_]{2,}.are/[a-z]+)/([-0-9.a-zA-Z_ ]+)$", true));
     subjPatterns.push_back(
         RegExp::Pointer(NEW, "^(areas/[-a-z0-9_]{2,}.are)/([a-z_ ]+)$", true));
@@ -48,27 +51,53 @@ CodeSourceRepo::~CodeSourceRepo()
     thisClass = 0;    
 }
 
+/** 
+ * Check file name against allowed patterns and fill in corresponding sub-paths (folder and file name). 
+ */
+bool CodeSourceRepo::applySubjPatterns(const DLString &csNameConst, DLString &folderName, DLString &fileName, bool &isPublic) const
+{
+    DLString pubPrefix("public/");
+    DLString csName(csNameConst);
+
+    isPublic = false;
+
+    // Scripts beginning with "public/" going to be published to dreamland_fenia_public repo
+    if (pubPrefix.strPrefix(csName)) {
+        // Strip "public/" part to check the rest of the pathname against the patterns
+        csName.replace(0, pubPrefix.size(), "");
+        isPublic = true;
+    }
+
+    for (auto &pattern: subjPatterns) {
+        RegExp::MatchVector matches = pattern->subexpr(csName.c_str());
+        if (!matches.empty()) {
+            folderName = matches.at(0);
+            fileName = matches.at(1);
+            return true;
+        }
+    }
+
+    return false;
+}
 
 void CodeSourceRepo::save(Scripting::CodeSource &cs) 
 {
     DLString folderName;
     DLString fileName;
+    bool isPublic;
 
-    for (auto &pattern: subjPatterns) {
-        RegExp::MatchVector matches = pattern->subexpr(cs.name.c_str());
-        if (!matches.empty()) {
-            folderName = matches.at(0);
-            fileName = matches.at(1);
-            break;
-        }
-    }
-
-    if (folderName.empty() || fileName.empty()) {
+    if (!applySubjPatterns(cs.name, folderName, fileName, isPublic)) {
         LogStream::sendWarning() << "CS repo: unknown pattern for " << cs.name << endl;
         return;
     }
 
     fs::path path = dreamland->getFeniaScriptDir().getAbsolutePath().c_str();
+
+    if (isPublic) {
+        // Re-add "public" folder part as folderName won't have it
+        path /= "public";
+    } 
+
     path /= folderName.c_str();
     fs::create_directories(path);
 
@@ -102,12 +131,18 @@ bool CodeSourceRepo::readAll(const DLString &folderName)
             path /= folderName.c_str();
 
         for (const auto& dirEntry : fs::recursive_directory_iterator(path)) {
+            DLString stubFileName, stubFolderName;
+            bool isPublic;
+
             if (!dirEntry.is_regular_file())
                 continue;
 
             DLString csName = fs::relative(dirEntry.path(), base).generic_string();
-            if (csName.empty() || csName.at(0) == '.')
+
+            if (!applySubjPatterns(csName, stubFolderName, stubFileName, isPublic))
                 continue;
+
+            LogStream::sendNotice() << "CS repo: loading " << csName << endl;
 
             if (read(csName))
                 success++;

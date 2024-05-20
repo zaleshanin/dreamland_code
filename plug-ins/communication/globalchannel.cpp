@@ -21,7 +21,6 @@
 #include "def.h"
 
 GSN(deafen);
-LANG(common);
 
 bool has_nochannel(Character *ch)
 {
@@ -68,13 +67,13 @@ void GlobalChannel::run( Character *ch, const DLString &arg )
 
         if (!IS_SET(ch->comm, off)) {
             if (msgOn.empty( ))
-                ch->printf( "Канал %s теперь включен.\r\n", getName( ).c_str( ) );
+                ch->pecho( "Канал %s теперь включен.", getName( ).c_str( ) );
             else
                 ch->pecho( msgOn );
         }
         else {
             if (msgOff.empty( ))
-                ch->printf( "Канал %s теперь выключен.\r\n", getName( ).c_str( ) );
+                ch->pecho( "Канал %s теперь выключен.", getName( ).c_str( ) );
             else
                 ch->pecho( msgOff );
         }
@@ -113,7 +112,6 @@ void GlobalChannel::run( Character *ch, const DLString &arg )
             const DLString &fmtVict = fNoarg ? msgOtherNoarg : fMild ? msgOtherMild : msgOther;
             
             DLString outVict = argGarbled;
-            applyTranslation( ch, outVict, victim );
 
             DLString message = outputVict( ch, victim, fmtVict, outVict );
             victim->pecho(message);
@@ -254,17 +252,6 @@ bool GlobalChannel::checkSoap( Character *ch ) const
     oldact("$c1 пускает изо рта {Rр{Yа{Gз{Cн{Mо{Rц{Gв{Yе{Cт{Mн{Yы{Cе{x мыльные пузыри.", ch, 0, 0, TO_ROOM);
     oldact("Ты пускаешь изо рта {Rр{Yа{Gз{Cн{Mо{Rц{Gв{Yе{Cт{Mн{Yы{Cе{x мыльные пузыри.", ch, 0, 0, TO_CHAR);
     return true;
-}
-
-void GlobalChannel::applyTranslation( Character *ch, DLString &msg, Character *victim ) const
-{
-    if (!translate)
-        return;
-
-    msg = ch->language->translate( msg, ch, victim );
-
-    if (ch->language != lang_common)
-        msg = DLString( "[" ) + ch->language->getName( ) + "] " + msg;
 }
 
 void GlobalChannel::triggers( Character *ch, const DLString &msg ) const

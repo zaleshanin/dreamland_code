@@ -22,7 +22,7 @@
 #include "act.h"
 #include "../../anatolia/handler.h"
 #include "effects.h"
-#include "mercdb.h"
+
 #include "vnum.h"
 #include "def.h"
 
@@ -468,7 +468,7 @@ NPCharacter * BeerElementalWE::createElemental( PCharacter *ch, ArcadianDrinkBeh
     mob->damage[DICE_BONUS] = level / 2 + 10;
     mob->hitroll = level;
 
-    SET_BIT(mob->affected_by, AFF_CHARM);
+    affect_add_charm(mob);
     char_to_room(mob,ch->in_room);
     mob->master = mob->leader = ch;
     

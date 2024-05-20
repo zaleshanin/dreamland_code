@@ -1,7 +1,6 @@
 #
 # ruffina, DreamLand, 2003
 # NoFate, 2002
-bin_PROGRAMS = xmlreftest xmltest
 
 noinst_LTLIBRARIES = libxml.la
 
@@ -21,8 +20,6 @@ AM_LFLAGS = -olex.yy.c
 libxml_la_SOURCES = \
 exceptions.cpp \
 xmlboolean.cpp \
-xmlbyte.cpp \
-xmlchar.cpp \
 xmlclause.cpp \
 xmlcontainer.cpp \
 xmldate.cpp \
@@ -43,13 +40,6 @@ xmlstringlist.cpp \
 xmltimestamp.cpp \
 xmlvariable.cpp \
 xmlvariablecontainer.cpp 
-
-xmlreftest_SOURCES = xmlreftest.cpp
-xmlreftest_LDADD = libxml.la ../lang/liblang.la ../util/libutil.la ../l10n/libl10n.la ../alloc/liballoc.la
-xmlreftest_MOC = xmlreftest.h
-
-xmltest_SOURCES = xmltest.cpp
-xmltest_LDADD = libxml.la ../lang/liblang.la ../util/libutil.la ../l10n/libl10n.la ../alloc/liballoc.la
 
 CLEANFILES = xmlmatchpattern.c++ xmlparser.c++
 AM_CPPFLAGS += $(src_INCLUDES)

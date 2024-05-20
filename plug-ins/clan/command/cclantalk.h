@@ -8,11 +8,10 @@
 
 #include "clan.h"
 #include "commandplugin.h"
-#include "defaultcommand.h"
 
-void clantalk( Clan &, const char *, ... );
+void clantalk( Clan &, const DLString &message );
 
-class CClanTalk : public CommandPlugin, public DefaultCommand {
+class CClanTalk : public CommandPlugin {
 public:
     typedef ::Pointer<CClanTalk> Pointer;
 

@@ -13,6 +13,7 @@
  *    и все остальные, кто советовал и играл в этот MUD                    *
  ***************************************************************************/
 #include <math.h>
+#include <string.h>
 
 #include "commandtemplate.h"
 #include "shoptrader.h"
@@ -40,7 +41,7 @@
 #include "arg_utils.h"
 #include "skill_utils.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "act.h"
 #include "../../anatolia/handler.h"
 #include "interp.h"
@@ -157,7 +158,7 @@ CMDRUN( buy )
         return;
     }
 
-    char buf[MAX_STRING_LENGTH], arg[MAX_STRING_LENGTH];
+    char arg[MAX_STRING_LENGTH];
     char argument[MAX_INPUT_LENGTH];
     int cost, oldcost, roll;
     NPCharacter*  keeper;
@@ -261,19 +262,19 @@ CMDRUN( buy )
 
     if ( number > 1 )
     {
-        sprintf( buf, "$c1 покупает $o4[%d].", number );
-        oldact( buf, ch, obj, 0, TO_ROOM);
-        sprintf( buf, "Ты покупаешь $o4[%d] за %d серебрян%s.",
+        DLString toRoom = fmt(0, "$c1 покупает $o4[%d].", number );
+        oldact( toRoom.c_str(), ch, obj, 0, TO_ROOM);
+        DLString toChar = fmt(0, "Ты покупаешь $o4[%d] за %d серебрян%s.",
                         number, cost * number,
                         GET_COUNT( cost * number, "ую монету", "ые монеты", "ых монет" ) );
-        oldact( buf, ch, obj, 0, TO_CHAR);
+        oldact( toChar.c_str(), ch, obj, 0, TO_CHAR);
     }
     else
     {
         oldact("$c1 покупает $o4.", ch, obj, 0, TO_ROOM);
-        sprintf( buf, "Ты покупаешь $o4 за %d серебрян%s.",
+        DLString toChar = fmt( 0, "Ты покупаешь $o4 за %d серебрян%s.",
                         cost, GET_COUNT( cost, "ую монету", "ые монеты", "ых монет" ) );
-        oldact( buf, ch, obj, 0, TO_CHAR);
+        oldact( toChar.c_str(), ch, obj, 0, TO_CHAR);
     }
 
     int wlevel = get_wear_level( ch, obj );
@@ -518,11 +519,11 @@ CMDRUN( list )
         const StockInfo &si = stock.at( i );
         
         if (IS_OBJ_STAT( si.obj, ITEM_INVENTORY ))
-            buf << dlprintf( "[ {Y%3d{x |%3d %5d   --   ] ",
+            buf << fmt(0, "[ {Y%3d{x |%3d %5d   --   ] ",
                     i+1, si.obj->level, si.cost );
 
         else 
-            buf << dlprintf( "[ {Y%3d{x |%3d %5d %6d ] ",
+            buf << fmt(0, "[ {Y%3d{x |%3d %5d %6d ] ",
                     i+1, si.obj->level, si.cost, si.count );
 
         webManipManager->decorateShopItem( buf, si.obj->getShortDescr( '1' ), si.obj, ch );

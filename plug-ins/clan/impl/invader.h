@@ -8,7 +8,6 @@
 
 #include "clanmobiles.h"
 #include "commandplugin.h"
-#include "defaultcommand.h"
 
 class ClanGuardInvader: public ClanGuard {
 XML_OBJECT
@@ -21,7 +20,7 @@ protected:
         virtual int getCast( Character * );
 };
 
-class CDarkLeague : public CommandPlugin, public DefaultCommand {
+class CDarkLeague : public CommandPlugin {
 public:
     typedef ::Pointer<CDarkLeague> Pointer;
 

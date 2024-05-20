@@ -7,12 +7,11 @@
 #define CMLT_H
 
 #include "commandplugin.h"
-#include "defaultcommand.h"
 
 class PCMemoryInterface;
 class PCharacter;
 
-class CMlt : public CommandPlugin, public DefaultCommand {
+class CMlt : public CommandPlugin {
 public:
         typedef ::Pointer<CMlt> Pointer;
     

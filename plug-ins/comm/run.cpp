@@ -9,7 +9,7 @@
 #include "movetypes.h"
 #include "door_utils.h"
 
-#include "char.h"
+
 #include "commandtemplate.h"
 #include "pcharacter.h"
 #include "room.h"
@@ -82,7 +82,7 @@ CMDRUN( run )
             }
         }
         else if (!isSmallLetter( walk[i] )) {
-            pch->printf( "Непонятное направление для бега: '%c'.\r\n", walk[i] );
+            pch->pecho( "Непонятное направление для бега: '%c'.", walk[i] );
             return;
         }
         
@@ -279,10 +279,10 @@ void XMLAttributeSpeedWalk::show(PCharacter *ch) const
     }
         
     if (ch->isCoder())
-        ch->printf("Развернутый маршрут: %s\r\n", path.c_str());
+        ch->pecho("Развернутый маршрут: %s", path.c_str());
 
     if (!collated.empty())
-        ch->printf("Тебе оставалось бежать: {hs{c%s{x\r\n", collated.c_str());
+        ch->pecho("Тебе оставалось бежать: {hs{c%s{x", collated.c_str());
 }
 
 char XMLAttributeSpeedWalk::getFirstCommand( ) const
@@ -309,6 +309,6 @@ void XMLAttributeSpeedWalk::clearFirstCommand( )
 int XMLAttributeSpeedWalk::getFirstDoor( ) const
 {
     char c = getFirstCommand( );
-    return direction_lookup( Char::lower(c) );
+    return direction_lookup( dl_tolower(c) );
 }
 

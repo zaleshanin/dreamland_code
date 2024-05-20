@@ -34,7 +34,6 @@
 #include "npcharactermanager.h"
 #include "pcharactermanager.h"
 #include "race.h"
-#include "racelanguage.h"
 #include "skillmanager.h"
 #include "clanmanager.h"
 #include "profession.h"
@@ -52,7 +51,7 @@
 #include "bonus.h"
 #include "eventbus.h"
 
-#include "mercdb.h"
+
 #include "merc.h"
 #include "def.h"
 
@@ -87,7 +86,6 @@ DreamLand::DreamLand( )
         npcharacterManager.construct( );
         pcharacterManager.construct( );
         raceManager.construct( );
-        raceLanguageManager.construct( );
         skillManager.construct( );
         clanManager.construct( );
         professionManager.construct( );
@@ -120,7 +118,6 @@ DreamLand::~DreamLand( )
         objectManager.clear( );
         scheduler.clear( );
         raceManager.clear( );
-        raceLanguageManager.clear( );
         skillManager.clear( );
         clanManager.clear( );
         professionManager.clear( );
@@ -277,7 +274,6 @@ void DreamLand::setBootTime( )
 
 void DreamLand::setSignals( )
 {
-#ifndef __MINGW32__
     signal( SIGTERM, &signalHandler );
     signal( SIGSTOP, &signalHandler );
     signal( SIGINT, &signalHandler );
@@ -285,7 +281,6 @@ void DreamLand::setSignals( )
     signal( SIGXFSZ, &signalHandler );
 
     signal( SIGPIPE, SIG_IGN );
-#endif
 }
 
 void DreamLand::signalHandler( int signo )

@@ -12,7 +12,7 @@
 #include "room.h"
 #include "save.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "act.h"
 #include "interp.h"
 #include "handler.h"
@@ -267,7 +267,7 @@ CMDRUNP( afk )
         
         if (argument[0] != '\0') {
             pch->getAttributes( ).getAttr<XMLStringAttribute>( "afk" )->setValue( argument );
-            pch->printf("Ты в режиме AFK: {c%s.{x\r\n", argument);
+            pch->pecho("Ты в режиме AFK: {c%s.{x", argument);
         }
         else
             pch->pecho("Режим AFK включен.");

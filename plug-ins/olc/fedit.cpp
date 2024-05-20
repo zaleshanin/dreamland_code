@@ -10,7 +10,7 @@
 #include "act.h"
 #include "comm.h"
 #include "websocketrpc.h"
-#include "mercdb.h"
+
 #include "def.h"
 
 extern void help_save_ids();
@@ -147,7 +147,7 @@ CMD(fedit, 50, "", POS_DEAD, 103, LOG_ALWAYS, "Online configuration file editor.
 
     list<Configurable::Pointer> matches = configReg->getAll(arg1);
     if (matches.empty()) {
-        ch->printf("Не найдено ни одного файла с именем {W%s{x.\r\n", arg1.c_str());
+        ch->pecho("Не найдено ни одного файла с именем {W%s{x.", arg1.c_str());
         return;
     }
 

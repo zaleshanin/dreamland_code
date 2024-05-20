@@ -8,7 +8,6 @@
 #include "xmllist.h"
 
 #include "commandplugin.h"
-#include "defaultcommand.h"
 #include "roomchannel.h"
 #include "personalchannel.h"
 #include "worldchannel.h"
@@ -77,7 +76,7 @@ protected:
     virtual bool parseArguments( Character *, const DLString &, DLString &, DLString & ) const;
 };
 
-class ChannelsCommand : public CommandPlugin, public DefaultCommand {
+class ChannelsCommand : public CommandPlugin {
 XML_OBJECT    
 public:
     typedef ::Pointer<ChannelsCommand> Pointer;

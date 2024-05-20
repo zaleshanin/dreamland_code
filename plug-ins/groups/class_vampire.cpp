@@ -21,7 +21,7 @@
 
 
 #include "act_move.h"
-#include "mercdb.h"
+
 #include "save.h"
 #include "magic.h"
 #include "fight.h"
@@ -904,7 +904,7 @@ SKILL_RUNP( bonedagger )
             return;
         }
         else  {
-            ch->printf("Ты ждешь, когда некто '{R%s{x' отбросит тень на твою могилу.\n\r", ch->ambushing);
+            ch->pecho("Ты ждешь, когда некто '{R%s{x' отбросит тень на твою могилу.", ch->ambushing);
             return;
         }
     }

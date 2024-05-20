@@ -40,7 +40,7 @@
 #include "dreamland.h"
 
 #include "act_move.h"
-#include "mercdb.h"
+
 #include "magic.h"
 #include "fight.h"
 #include "weapongenerator.h"
@@ -408,9 +408,9 @@ static Object * create_arrow( int color, int level )
         arrow->value2(4 + level / 10);
     }
 
-    arrow->fmtName( arrow->getName( ), str_name );
-    arrow->fmtShortDescr( arrow->getShortDescr( ), str_short );        
-    arrow->fmtDescription( arrow->getDescription( ), str_long );        
+    arrow->setName( fmt(0, arrow->getName( ), str_name ).c_str());
+    arrow->setShortDescr( fmt(0, arrow->getShortDescr( ), str_short ));        
+    arrow->setDescription( fmt(0, arrow->getDescription( ), str_long ));        
     
     return arrow;
 }
@@ -587,7 +587,6 @@ SKILL_RUNP( ambush )
 {
     char arg[MAX_INPUT_LENGTH];
     Character *victim;
-    char buf[MAX_STRING_LENGTH];
 
     if ( MOUNTED(ch) )
     {
@@ -606,8 +605,7 @@ SKILL_RUNP( ambush )
             }
             else
             {
-                    sprintf(buf, "Ты сидишь в засаде на %s.\n\r", ch->ambushing);
-                    ch->send_to(buf);
+                    ch->pecho("Ты сидишь в засаде на %s.", ch->ambushing);
                     return;
             }
     }

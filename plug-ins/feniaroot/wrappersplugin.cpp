@@ -26,6 +26,9 @@
 #include "validatetask.h"
 #include "structwrappers.h"
 #include "feniaskillaction.h"
+#include "commandmanager.h"
+#include "wrappedcommand.h"
+#include "areaquestwrapper.h"
 
 #include "class.h"
 #include "core/fenia/feniamanager.h"
@@ -37,7 +40,7 @@
 #include "room.h"
 #include "object.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "def.h"
 
 #include "subr.h"
@@ -79,6 +82,11 @@ WrappersPlugin::linkTargets()
         if (pArea->wrapper)
             wrapper_cast<AreaIndexWrapper>(pArea->wrapper)->setTarget( pArea );
 
+    for (auto &q: areaQuests) {
+        if (q.second->wrapper)
+            wrapper_cast<AreaQuestWrapper>(q.second->wrapper)->setTarget(q.second);
+    }
+
     for (int sn = 0; sn < skillManager->size(); sn++) {
         Skill *skill = skillManager->find(sn);
         Spell::Pointer spell = skill->getSpell();
@@ -99,6 +107,12 @@ WrappersPlugin::linkTargets()
             LogStream::sendNotice() << "Fenia skill command: setting target for " << skill->getName() << endl;
             wrapper_cast<SkillCommandWrapper>(cmd->wrapper)->setTarget(*cmd);
         }
+    }
+
+    for (auto &cmd: commandManager->getCommands().getCommands()) {
+        WrappedCommand *wcmd = const_cast<WrappedCommand *>(cmd.getDynamicPointer<WrappedCommand>());
+        if (wcmd && wcmd->getHelp() && wcmd->getHelp()->getID() > 0)
+            wcmd->linkWrapper();
     }
 }
 
@@ -160,9 +174,11 @@ WrappersPlugin::initialization( )
     Class::regMoc<LanguageWrapper>( );
     Class::regMoc<RaceWrapper>( );
     Class::regMoc<LiquidWrapper>( );
+    Class::regMoc<WearlocWrapper>( );
     Class::regMoc<SkillWrapper>( );
     Class::regMoc<SkillGroupWrapper>( );
-    Class::regMoc<FeniaSkill>( );
+    Class::regMoc<FeniaCommandWrapper>( );
+    Class::regMoc<AreaQuestWrapper>( );
     
     FeniaManager::getThis( )->recover( );
     
@@ -184,7 +200,6 @@ WrappersPlugin::initialization( )
     traitsAPIJson<AreaIndexWrapper>("area_index", apiDump, false);    
     traitsAPIJson<Root>("root", apiDump, true);     
     traitsAPIJson<AffectWrapper>("affect", apiDump, false);     
-    traitsAPIJson<CommandWrapper>("command", apiDump, false);     
     traitsAPIJson<AreaWrapper>("area", apiDump, false);     
     traitsAPIJson<HometownWrapper>("hometown", apiDump, false);     
     traitsAPIJson<ProfessionWrapper>("profession", apiDump, false);     
@@ -194,16 +209,18 @@ WrappersPlugin::initialization( )
     traitsAPIJson<BonusWrapper>("bonus", apiDump, false);     
     traitsAPIJson<ReligionWrapper>("religion", apiDump, false);     
     traitsAPIJson<LiquidWrapper>("liquid", apiDump, false);     
+    traitsAPIJson<WearlocWrapper>("wearloc", apiDump, false);     
     traitsAPIJson<MaterialWrapper>("material", apiDump, false);
     traitsAPIJson<SkillWrapper>("skill", apiDump, false);     
     traitsAPIJson<SkillGroupWrapper>("skillgroup", apiDump, false);     
-    traitsAPIJson<FeniaSkill>("feniaskill", apiDump, false);
     traitsAPIJson<SpellWrapper>("spell", apiDump, false);
     traitsAPIJson<AffectHandlerWrapper>("affecthandler", apiDump, false);
     traitsAPIJson<SkillCommandWrapper>("skillcommand", apiDump, false);
     traitsAPIJson<FeniaSpellContext>("spellcontext", apiDump, false);
     traitsAPIJson<FeniaCommandContext>("commandcontext", apiDump, false);
     traitsAPIJson<FeniaString>("string", apiDump, false);
+    traitsAPIJson<FeniaCommandWrapper>("command", apiDump, false);     
+    traitsAPIJson<AreaQuestWrapper>("areaquest", apiDump, false);     
     dumpTables(apiDump);
 
     Json::FastWriter writer;
@@ -213,14 +230,26 @@ WrappersPlugin::initialization( )
     );
 }
 
+void WrappersPlugin::unlinkTargets()
+{
+    for (auto &cmd: commandManager->getCommands().getCommands()) {
+        WrappedCommand *wcmd = const_cast<WrappedCommand *>(cmd.getDynamicPointer<WrappedCommand>());
+        if (wcmd)
+            wcmd->unlinkWrapper();   
+    }
+}
+
 void WrappersPlugin::destruction( ) {
     DLScheduler::getThis()->slay( ValidateTask::Pointer(NEW) );
+
+    unlinkTargets();
 
     Scripting::gc = false;
     FeniaManager::getThis( )->backup( );
 
+    Class::unregMoc<AreaQuestWrapper>( );
+    Class::unregMoc<WearlocWrapper>( );
     Class::unregMoc<LiquidWrapper>( );
-    Class::unregMoc<FeniaSkill>( );
     Class::unregMoc<SkillGroupWrapper>( );
     Class::unregMoc<SkillWrapper>( );
     Class::unregMoc<HometownWrapper>( );
@@ -236,6 +265,7 @@ void WrappersPlugin::destruction( ) {
     Class::unregMoc<TableWrapper>( );
     Class::unregMoc<CommandWrapper>( );
     Class::unregMoc<SkillCommandWrapper>( );
+    Class::unregMoc<FeniaCommandWrapper>( );
     Class::unregMoc<AffectWrapper>( );
     Class::unregMoc<AreaIndexWrapper>( );
     Class::unregMoc<SpellWrapper>( );

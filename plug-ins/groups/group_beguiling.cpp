@@ -12,7 +12,8 @@
  *    Andreyanov Aleksandr {Manwe}                                         *
  *    и все остальные, кто советовал и играл в этот MUD                    *
  ***************************************************************************/
- 
+#include <string.h>
+
 #include "group_beguiling.h"
 #include "spelltemplate.h"
 #include "affecthandlertemplate.h"
@@ -29,7 +30,7 @@
 
 
 #include "merc.h"
-#include "mercdb.h"
+
 #include "occupations.h"
 #include "handler.h"
 #include "act.h"
@@ -107,7 +108,6 @@ VOID_SPELL(MagicJar)::run( Character *ch, Character *victim, int sn, int level )
 { 
     Object *vial;
     Object *jar;
-    char buf[MAX_STRING_LENGTH];
 
     if (victim == ch)
         {
@@ -150,14 +150,14 @@ VOID_SPELL(MagicJar)::run( Character *ch, Character *victim, int sn, int level )
     jar->from = str_dup(ch->getNameC());
     jar->level = ch->getRealLevel( );
 
-    jar->fmtName( jar->getName( ), victim->getNameC());
-    jar->fmtShortDescr( jar->getShortDescr( ), victim->getNameC());
-    jar->fmtDescription( jar->getDescription( ), victim->getNameC());
+    jar->setName( fmt(0, jar->getName( ), victim->getNameC()).c_str());
+    jar->setShortDescr( fmt(0, jar->getShortDescr( ), victim->getNameC()));
+    jar->setDescription( fmt(0, jar->getDescription( ), victim->getNameC()));
 
-    sprintf( buf,jar->pIndexData->extra_descr->description, victim->getNameC() );
+    DLString descr = fmt(0, jar->pIndexData->extra_descr->description, victim->getNameC() );
     jar->extra_descr = new_extra_descr();
     jar->extra_descr->keyword = str_dup( jar->pIndexData->extra_descr->keyword );
-    jar->extra_descr->description = str_dup( buf );
+    jar->extra_descr->description = str_dup( descr.c_str() );
     jar->extra_descr->next = 0;
 
     jar->level = ch->getRealLevel( );

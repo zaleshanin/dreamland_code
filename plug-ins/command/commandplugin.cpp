@@ -5,16 +5,30 @@
 
 #include "commandplugin.h"
 #include "commandmanager.h"
+#include "commandpluginloader.h"
+
+bool CommandPlugin::saveCommand() const
+{
+    getLoader()->saveCommand(Pointer(this));
+    return true;
+}
 
 void CommandPlugin::initialization( )
 {
-    commandManager->load( Pointer( this ) );
+    getLoader()->loadCommand( Pointer( this ) );
     commandManager->registrate( Pointer( this ) );
+    linkWrapper();
 }
 
 void CommandPlugin::destruction( )
 {
-//    commandManager->save( Pointer( this ) );
+    unlinkWrapper();
+//    getLoader()->saveCommand( Pointer( this ) );
     commandManager->unregistrate( Pointer( this ) );
+}
+
+CommandLoader * CommandPlugin::getLoader( ) const
+{
+    return commandPluginLoader;
 }
 

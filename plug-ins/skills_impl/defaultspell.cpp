@@ -3,6 +3,7 @@
  * ruffina, 2004
  */
 #include <math.h>
+#include <string.h>
 
 #include "defaultspell.h"
 #include "skillreference.h"
@@ -30,7 +31,7 @@
 #include "merc.h"
 #include "handler.h"
 #include "act.h"
-#include "mercdb.h"
+
 #include "def.h"
 
 GSN(spellbane);

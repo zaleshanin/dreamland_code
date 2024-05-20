@@ -6,33 +6,33 @@
 #define __CONFIGS_H__
 
 #include "commandplugin.h"
-#include "defaultcommand.h"
 #include "xmllist.h"
 #include "xmlinteger.h"
 #include "xmlpointer.h"
 
 class PCharacter;
 
-class ConfigElement : public DefaultCommand, public XMLCommand {
+class ConfigElement : public XMLVariableContainer {
 XML_OBJECT
-friend class ConfigCommand;
 public:
     typedef ::Pointer<ConfigElement> Pointer;
     typedef ::XMLPointer<ConfigElement> XMLPointer;
     
-    virtual const DLString & getRussianName( ) const;
-    virtual void run( Character *, const DLString & );
-
-protected:    
+    const DLString & getName() const;
+    const DLString & getRussianName( ) const;
     bool handleArgument( PCharacter *, const DLString & ) const;
+    bool available(PCharacter *) const;
 
     bool printText( PCharacter * ) const;
     void printRow( PCharacter * ) const;
     void printLine( PCharacter * ) const;
 
+protected:    
     XML_VARIABLE XMLFlagsWithTable   bit;
-    XML_VARIABLE XMLString  rname;
+    XML_VARIABLE XMLString  name, rname;
     XML_VARIABLE XMLString  msgOn, msgOff;
+    XML_VARIABLE XMLString  hint;
+    XML_VARIABLE XMLIntegerNoEmpty level;
 
 private:
     Flags & getField( PCharacter * ) const;
@@ -51,7 +51,7 @@ public:
     XML_VARIABLE XMLString name;
 };
 
-class ConfigCommand : public CommandPlugin, public DefaultCommand {
+class ConfigCommand : public CommandPlugin {
 XML_OBJECT
 public:
     typedef ::Pointer<ConfigCommand> Pointer;

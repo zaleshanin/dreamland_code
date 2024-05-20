@@ -35,7 +35,6 @@
 #include "clanreference.h"
 #include "profession.h"
 #include "race.h"
-#include "racelanguage.h"
 #include "religion.h"
 #include "affectlist.h"
 
@@ -145,7 +144,6 @@ public:
     void send_to( const char * );
     void send_to( const DLString& );
     void send_to( ostringstream& );
-    void printf( const char *format, ... );
     void vpecho( const char *, va_list );
     void pecho( const DLString &line );
     void pecho( const char *, ... );
@@ -295,7 +293,7 @@ public:
 
     // parts stuff 
     XMLFlags   form;
-    int        parts;
+    XMLFlags        parts;
     int        size;
     char*        material;
     
@@ -306,7 +304,6 @@ public:
     bool        riding;        
     Character *        mount;
 
-    RaceLanguageReference language;
     char        *ambushing;
     
     // traps

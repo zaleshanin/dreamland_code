@@ -13,9 +13,12 @@
 #include "affecthandlerwrapper.h"
 #include "affectwrapper.h"
 #include "skillcommandwrapper.h"
+#include "commandwrapper.h"
+#include "areaquestwrapper.h"
 #include "subr.h"
 #include "fenia/register-impl.h"
 
+#include "wrappedcommand.h"
 #include "class.h"
 #include "spell.h"
 #include "affecthandler.h"
@@ -26,7 +29,7 @@
 #include "object.h"
 #include "affect.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "def.h"
 
 using namespace Scripting;
@@ -128,6 +131,23 @@ Scripting::Register WrapperManager::getWrapper(SkillCommand *cmd)
     return wrapperAux<SkillCommandWrapper>(cmd->getID(), cmd);
 }
 
+Scripting::Register WrapperManager::getWrapper(WrappedCommand *cmd) 
+{
+    if (!cmd)
+        return Scripting::Register();
+    
+    return wrapperAux<FeniaCommandWrapper>(cmd->getID(), cmd);
+}
+
+Scripting::Register WrapperManager::getWrapper(AreaQuest *q) 
+{
+    if (!q)
+        return Scripting::Register();
+    
+    return wrapperAux<AreaQuestWrapper>(q->getID(), q);
+}
+
+
 template <typename WrapperType, typename TargetType>
 Scripting::Register WrapperManager::wrapperAux( long long id, TargetType t )
 {
@@ -189,6 +209,16 @@ void WrapperManager::linkWrapper(Affect *paf)
 void WrapperManager::linkWrapper(SkillCommand *cmd) 
 {
     linkAux<SkillCommandWrapper>(cmd->getID(), cmd);
+}
+
+void WrapperManager::linkWrapper(WrappedCommand *cmd) 
+{
+    linkAux<FeniaCommandWrapper>(cmd->getID(), cmd);
+}
+
+void WrapperManager::linkWrapper(AreaQuest *q) 
+{
+    linkAux<AreaQuestWrapper>(q->getID(), q);
 }
 
 

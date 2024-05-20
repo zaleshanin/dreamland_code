@@ -56,11 +56,12 @@
 *        ROM license, in the file Rom24/doc/rom.license                           *
 ***************************************************************************/
 
+#include <string.h>
 
 #include "skill.h"
 #include "spell.h"
 
-#include "char.h"
+
 #include "commandtemplate.h"
 #include "affect.h"
 #include "room.h"
@@ -71,7 +72,7 @@
 #include "ban.h"
 #include "act.h"
 
-#include "mercdb.h"
+
 #include "npcharacter.h"
 #include "pcharacter.h"
 #include "race.h"
@@ -155,7 +156,6 @@ int parsebet (const int currentbet, const char *argument)
         int newbet = 0;                /* a variable to temporarily hold the new bet */
         char string[MAX_INPUT_LENGTH]; /* a buffer to modify the bet string */
         char *stringptr = string;      /* a pointer we can move around */
-        char buf2[MAX_STRING_LENGTH];
 
         strcpy (string,argument);      /* make a work copy of argument */
 
@@ -172,7 +172,6 @@ int parsebet (const int currentbet, const char *argument)
                 }
                 else
                 {
-                        sprintf (buf2,"considering: * x \n\r");
                         if ((*stringptr == '*') || (*stringptr == 'x')) /* multiply */
                         {
                                 if (strlen (stringptr) == 1) /* only x specified, assume default */
@@ -188,7 +187,6 @@ int parsebet (const int currentbet, const char *argument)
 
 void auction_update (void)
 {
-    char buf[MAX_STRING_LENGTH];
     DLString msg;
     
     if (auction->item != 0)
@@ -209,14 +207,15 @@ void auction_update (void)
             }
             else
             {
-                sprintf (buf, "%s{Y: ставок не получено -- %s{x.", auction->item->getShortDescr( '1' ).c_str( ),
-                     ((auction->going == 1) ? "раз" : "два"));
-                talk_auction (buf);
+                talk_auction(fmt(0, "%s{Y: ставок не получено -- %s{x.", 
+                        auction->item->getShortDescr( '1' ).c_str( ),
+                        ((auction->going == 1) ? "раз" : "два")).c_str());
+
                 if (auction->startbet != 0)
                 {
-                  sprintf(buf, "Начальная цена: %d золот%s{x.", auction->startbet,
-                                GET_COUNT(auction->startbet,"ая монета","ые монеты","ых монет"));
-                  talk_auction(buf);
+                  talk_auction(fmt(0, "Начальная цена: %d золот%s{x.", 
+                                auction->startbet,
+                                GET_COUNT(auction->startbet,"ая монета","ые монеты","ых монет")).c_str());
                 }
                 break;
             }
@@ -268,8 +267,6 @@ CMDRUNP( auction )
 {
         Object *obj;
         char arg1[MAX_INPUT_LENGTH];
-        char buf[MAX_STRING_LENGTH];
-        char betbuf[MAX_STRING_LENGTH];
         argument = one_argument (argument, arg1);
         DLString msg; 
 
@@ -298,28 +295,24 @@ CMDRUNP( auction )
                 {
                         if ( ch->is_immortal() )
                         {
-                                sprintf(buf,"Продавец -- %s, текущая ставка -- %s\n\r",
+                                ch->pecho("Продавец -- %s, текущая ставка -- %s",
                                         auction->seller->getNameC(),
                                         auction->buyer ? auction->buyer->getNameC() : "Нет");
-                                ch->send_to(buf);
                         }
                         /* show item data here */
                         if (auction->bet > 0)
                         {
-                                sprintf (buf, "Текущая ставка на выставленный лот -- %d золот%s{x.\n\r",
+                                ch->pecho("Текущая ставка на выставленный лот -- %d золот%s{x.",
                                         auction->bet,
                                         GET_COUNT(auction->bet,"ая монета","ые монеты","ых монет"));
-                                ch->send_to( buf);
                         }
                         else
                         {
-                                sprintf (buf, "Ставок на выставленный лот не получено{x.\n\r");
-                                ch->send_to( buf);
+                                ch->pecho("Ставок на выставленный лот не получено{x.");
                                 if (auction->startbet != 0)
                                 {
-                                        sprintf(buf, "Начальная цена -- %d золот%s{x.\n\r", auction->startbet,
+                                        ch->pecho("Начальная цена -- %d золот%s{x.", auction->startbet,
                                                 GET_COUNT(auction->startbet,"ая монета","ые монеты","ых монет"));
-                                        ch->send_to( buf);
                                 }
                         }
 
@@ -330,13 +323,12 @@ CMDRUNP( auction )
                                 gsn_identify->getSpell( )->run( ch, auction->item, gsn_identify, 0 );
                             return;
                         }
-                        sprintf( buf,
-                                "Лот: '%s{x'. Тип: %s. Экстра флаги: %s.\n\rВес: %d. Стоимость: %d. Уровень: %d.\n\r",
+                        ch->pecho(
+                                "Лот: '%s{x'. Тип: %s. Экстра флаги: %s.\n\rВес: %d. Стоимость: %d. Уровень: %d.",
                                 obj->getShortDescr( '1' ).c_str( ),
                                 item_table.message(obj->item_type).c_str( ), 
                                 extra_flags.messages( obj->extra_flags, true).c_str( ),
                                 obj->weight / 10, obj->cost, obj->level );
-                        ch->send_to( buf);
 
                         {        
                             map<DLString, bool> purposes;
@@ -352,7 +344,7 @@ CMDRUNP( auction )
                         }
 
                         if  (obj->item_type == ITEM_WEAPON) {
-                                ch->printf("Тип оружия: %s (%s), среднее повреждение %d.\r\n",
+                                ch->pecho("Тип оружия: %s (%s), среднее повреждение %d.",
                                            weapon_class.message(obj->value0() ).c_str( ),
                                            weapon_class.name( obj->value0() ).c_str( ),
                                            weapon_ave(obj));
@@ -403,9 +395,8 @@ CMDRUNP( auction )
                 }
                 else /* stop the auction */
                 {
-                        sprintf(buf,"Продажа остановлена Богами. Лот '%s{Y' конфискован{x.",
-                                auction->item->getShortDescr( '1' ).c_str( ));
-                        talk_auction(buf);
+                        talk_auction(fmt(0, "Продажа остановлена Богами. Лот '%s{Y' конфискован{x.",
+                                auction->item->getShortDescr( '1' ).c_str( )).c_str());
                         obj_to_char(auction->item, auction->seller);
                         auction->item = 0;
                         auction->seller = 0;
@@ -443,7 +434,6 @@ CMDRUNP( auction )
                         }
 
                         newbet = parsebet (auction->bet, argument);
-                        sprintf (betbuf,"Ставка: %d\n\r",newbet);
 
                         if ((auction->startbet != 0) && (newbet < (auction->startbet + 1)))
                         {
@@ -475,10 +465,9 @@ CMDRUNP( auction )
                         auction->going = 0;
                         auction->pulse = PULSE_AUCTION; /* start the auction over again */
 
-                        sprintf( buf, "На %s{Y получена новая ставка: %d золот%s{x.\n\r",
+                        talk_auction(fmt(0, "На %s{Y получена новая ставка: %d золот%s{x.\n\r",
                                 auction->item->getShortDescr( '4' ).c_str( ),newbet,
-                                GET_COUNT(newbet,"ая монета","ые монеты","ых монет"));
-                        talk_auction( buf );
+                                GET_COUNT(newbet,"ая монета","ые монеты","ых монет")).c_str());
                         return;
 
                 }
@@ -547,14 +536,12 @@ CMDRUNP( auction )
 
                         if (auction->startbet == 0)
                         {
-                                sprintf(buf, "Начальная цена владельцем не установлена{x.");
-                                talk_auction( buf );
+                                talk_auction("Начальная цена владельцем не установлена{x.");
                         }
                         else
                         {
-                                sprintf(buf, "Начальная цена: %d золот%s{x.", auction->startbet,
-                                        GET_COUNT(auction->startbet,"ая монета","ые монеты","ых монет"));
-                                talk_auction( buf );
+                                talk_auction(fmt(0, "Начальная цена: %d золот%s{x.", auction->startbet,
+                                        GET_COUNT(auction->startbet,"ая монета","ые монеты","ых монет")).c_str());
                         }
                         wiznet( 0, 0, 0, "Продавец -- %C1", ch );
                         return;

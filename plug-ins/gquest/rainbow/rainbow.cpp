@@ -29,7 +29,7 @@
 #include "pcharactermanager.h"
 
 #include "act.h"
-#include "mercdb.h"
+
 #include "handler.h"
 #include "save.h"
 #include "merc.h"
@@ -255,7 +255,7 @@ void RainbowGQuest::progress( std::ostringstream &ostr ) const
         cnt = countPieces( ch );
         
         if (cnt > 0) {
-            ostr << dlprintf("%s%-15s %s%-4d%s",
+            ostr << fmt(0, "%s%-15s %s%-4d%s",
                          GQChannel::NORMAL, ch->getName( ).c_str( ),         
                          GQChannel::BOLD, cnt, GQChannel::NORMAL)
                  << endl;
@@ -284,7 +284,7 @@ void RainbowGQuest::getQuestDescription( std::ostringstream &str ) const
             continue;
         
         
-        str << dlprintf("%s%-30s%s из %s%s",
+        str << fmt(0, "%s%-30s%s из %s%s",
                      GQChannel::NORMAL, ch->getNameP( '1' ).c_str( ), 
                      GQChannel::NORMAL, ch->in_room->getName(), GQChannel::NORMAL);
         if (t <= 5)

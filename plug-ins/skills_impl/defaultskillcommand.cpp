@@ -41,6 +41,19 @@ long long DefaultSkillCommand::getID() const
     return (myId << 4) | 7;
 }
 
+bool DefaultSkillCommand::saveCommand() const
+{
+    if (skill) {
+        const XMLTableElement *element = skill.getDynamicPointer<XMLTableElement>();
+        if (element) {
+            element->save();
+            return true;
+        }
+    }
+
+    return false;
+}
+
 
 void DefaultSkillCommand::setSkill( SkillPointer skill )
 {
@@ -65,17 +78,17 @@ SkillPointer DefaultSkillCommand::getSkill( ) const
 
 const DLString & DefaultSkillCommand::getName( ) const
 {
-    return DefaultCommand::getName( );
+    return Command::getName( );
 }
 
 const DLString & DefaultSkillCommand::getRussianName( ) const
 {
-    return DefaultCommand::getRussianName( );
+    return Command::getRussianName( );
 }
 
 bool DefaultSkillCommand::visible( Character *ch ) const
 {
-    if (!DefaultCommand::visible( ch ))
+    if (!Command::visible( ch ))
         return false;
 
     return getSkill( )->visible( ch );
@@ -224,7 +237,7 @@ void DefaultSkillCommand::run( Character *ch, const DLString &args )
 
     // Fall back to the old implementation.
     if (!feniaOverride)
-        DefaultCommand::run( ch, args );
+        Command::run( ch, args );
 
     // Potentially aggressive command, mark player as actively fighting.
     // Happens after 'run' because some skills (p.ex. camouflage) depend on last fight time delay.
@@ -237,7 +250,7 @@ void DefaultSkillCommand::run( Character *ch, const DLString &args )
 // Legacy method still defined for some commands.
 void DefaultSkillCommand::run( Character *ch, char *args )
 {
-    DefaultCommand::run( ch, args );
+    Command::run( ch, args );
 }
 
 // An 'apply' method is called from objprogs or various places in the code.

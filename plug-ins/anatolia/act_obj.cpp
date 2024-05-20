@@ -75,9 +75,10 @@
 #include "merc.h"
 #include "descriptor.h"
 #include "wiznet.h"
-#include "mercdb.h"
+
 #include "act.h"
 #include "interp.h"
+#include "areaquestutils.h"
 
 #include "stats_apply.h"
 #include "damageflags.h"
@@ -223,6 +224,7 @@ static bool oprog_get_money( Character *ch, Object *obj )
 
 bool oprog_get( Object *obj, Character *ch )
 {
+    aquest_trigger(obj, ch, "Get", "OC", obj, ch);
     FENIA_CALL( obj, "Get", "C", ch );
     FENIA_NDX_CALL( obj, "Get", "OC", obj, ch );
     BEHAVIOR_VOID_CALL( obj, get, ch );
@@ -247,7 +249,6 @@ static bool oprog_fetch( Character *ch, Object *obj, Object *container )
     FENIA_CALL( container, "Fetch", "CO", ch, obj );
     FENIA_NDX_CALL( container, "Fetch", "OCO", container, ch, obj );
     BEHAVIOR_CALL( container, fetch, ch, obj );
-    SKILLEVENT_CALL( ch, fetchItem, ch, obj, container );
 
     return false;
 }
@@ -913,8 +914,6 @@ static bool oprog_put(Object *obj, Character *ch, Object *container)
     FENIA_NDX_CALL( obj, "Put", "OCOO", obj, ch, obj, container );
     FENIA_NDX_CALL( container, "Put", "OCOO", container, ch, obj, container );
     
-    SKILLEVENT_CALL( ch, putItem, ch, obj, container );
-
     return false;
 }
 
@@ -1169,7 +1168,6 @@ static bool oprog_drop( Object *obj, Character *ch )
     FENIA_CALL( obj, "Drop", "C", ch )
     FENIA_NDX_CALL( obj, "Drop", "OC", obj, ch )
     BEHAVIOR_CALL( obj, drop, ch )
-    SKILLEVENT_CALL( ch, dropItem, ch, obj );
 
     return false;
 }
@@ -1338,6 +1336,14 @@ CMDRUNP( drop )
 #define GIVE_MODE_PRESENT 1
 bool omprog_give( Object *obj, Character *ch, Character *victim )
 {
+    aquest_trigger(obj, ch, "Give", "OCC", obj, ch, victim);
+    if (obj->carried_by != victim)
+        return true;
+
+    aquest_trigger(victim, ch, "Give", "CCO", victim, ch, obj);
+    if (obj->carried_by != victim)
+        return true;
+
     FENIA_CALL( obj, "Give", "CC", ch, victim )
     if (obj->carried_by != victim)
         return true;
@@ -1375,13 +1381,13 @@ static bool oprog_present( Object *obj, Character *ch, Character *victim )
 static void give_obj_char( Character *ch, Object *obj, Character *victim, int mode = GIVE_MODE_USUAL )
 {
     if (ch == victim) {
-        ch->printf("%s себе?\n\r", (mode ? "Подарить" : "Дать"));
+        ch->pecho("%s себе?", (mode ? "Подарить" : "Дать"));
         return;
     }
 
     if ( !victim->is_npc() && IS_GHOST( victim ) )
     {
-        ch->printf("Разве можно что-то %s призраку?\n\r", (mode ? "подарить" : "дать"));
+        ch->pecho("Разве можно что-то %s призраку?", (mode ? "подарить" : "дать"));
         return;
     }
 
@@ -1641,10 +1647,10 @@ CMDRUNP( vomit )
  */
 static bool oprog_use( Object *obj, Character *ch, const char *argument )
 {
+    aquest_trigger(obj, ch, "Use", "OCs", obj, ch, argument);
     FENIA_CALL( obj, "Use", "Cs", ch, argument );
     FENIA_NDX_CALL( obj, "Use", "OCs", obj, ch, argument );
     BEHAVIOR_CALL( obj, use, ch, argument );
-    SKILLEVENT_CALL( ch, useItem, ch, obj, argument );
 
     switch(obj->item_type) {
         case ITEM_POTION:
@@ -1752,25 +1758,4 @@ CMDRUNP( search )
 
     ch->pecho("Ты можешь искать только камни{le (stones){x.");
 }
-
-CMDRUNP( throw )
-{
-    DLString args = argument, arg = args.getOneArgument( );
-
-    if (!arg.empty( )) {
-        if (arg.strPrefix( "spear" ) || arg.strPrefix( "копье" )) {
-            interpret_cmd( ch, "throwspear", args.c_str( ) );
-            return;
-        }
-
-        if (arg.strPrefix( "stone" ) || arg.strPrefix( "камень" )) {
-            interpret_cmd( ch, "throwstone", args.c_str( ) );
-            return;
-        }
-    }
-
-    ch->pecho("Метнуть что?");
-}
-
-
 

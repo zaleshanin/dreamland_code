@@ -6,10 +6,8 @@
 #include <errno.h>
 #include <byteswap.h>
 #include <iconv.h>
-
-#ifndef __MINGW32__
+#include <string.h>
 #include <sys/socket.h>
-#endif
 
 #include "json/json.h"
 
@@ -22,7 +20,7 @@
 #include "descriptor.h"
 #include "telnet.h"
 
-#include "mercdb.h"
+
 #include "def.h"
 
 #include "iconvmap.h"
@@ -59,17 +57,6 @@ Descriptor::send(const char *buf)
         buffer_handler->write(this, buf);
 }
 
-void Descriptor::printf( const char *format, ... ) 
-{
-    char buf[MAX_STRING_LENGTH];
-    va_list ap;
-
-    va_start( ap, format );
-    vsprintf( buf, format, ap );
-    va_end( ap );
-    
-    send( buf );
-}
 
 void
 Descriptor::close( )
@@ -96,15 +83,9 @@ Descriptor::close( )
 void
 Descriptor::slay( )
 {
-#ifdef MCCP
     stopMccp( );
-#endif
 
-#ifndef __MINGW32__
     ::close( descriptor );
-#else
-    ::closesocket( descriptor );
-#endif
 
     if ( descriptor_list == this )
         descriptor_list = next;
@@ -248,7 +229,6 @@ Descriptor::writeFd(const unsigned char *txt, int length)
     return iStart;
 }
 
-#ifdef MCCP
 int
 Descriptor::processMccp( )
 {
@@ -387,14 +367,6 @@ Descriptor::writeRaw(const unsigned char *txt, int length)
 {
     return writeMccp(txt, length);
 }
-#else
-
-int
-Descriptor::writeRaw(const unsigned char *txt, int length)
-{
-    return writeSock(txt, length);
-}
-#endif
 
 const char * Descriptor::getRealHost( ) const
 {

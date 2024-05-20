@@ -26,7 +26,7 @@
 #include "alignment.h"
 #include "loadsave.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "websocketrpc.h"
 #include "nannyhandler.h"
 #include "feniamanager.h"
@@ -545,41 +545,20 @@ NMI_INVOKE( NannyHandler, randomizeStats, "randomize player stats during rolling
     return Register( );
 }
 
-NMI_INVOKE( NannyHandler, alignAllowed, "" )
+NMI_INVOKE( NannyHandler, alignMin, "" )
 {
-    ostringstream buf;
-    
-    align_print_allowed( getPlayer( args ), buf );
-    return buf.str( );
+    int a_min = ALIGN_EVIL;
+    int a_max = ALIGN_GOOD;
+    align_get_ranges(getPlayer(args), a_min, a_max);
+    return a_min;
 }
 
-NMI_INVOKE( NannyHandler, alignChoose, "" )
+NMI_INVOKE( NannyHandler, alignMax, "" )
 {
-    DLString a;
-    int n;
-    PCharacter *target;
-
-    if (args.size( ) != 2)
-       throw Scripting::NotEnoughArgumentsException( );
-    
-    target = getPlayer( args.front( ) );
-    a = args.back( ).toString( );
-    
-    if (a.isNumber( )) 
-        try {
-            n = align_choose_allowed( target, a.toInt( ) );  
-        } catch (const ExceptionBadType &) {
-            return false;
-        }
-    else
-        n = align_choose_allowed( target, a.c_str( ) );
-
-    
-    if (n == ALIGN_ERROR)
-        return false;
-
-    target->alignment = n;
-    return true;
+    int a_min = ALIGN_EVIL;
+    int a_max = ALIGN_GOOD;
+    align_get_ranges(getPlayer(args), a_min, a_max);
+    return a_max;
 }
 
 NMI_INVOKE( NannyHandler, help, "" )

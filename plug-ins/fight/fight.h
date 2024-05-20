@@ -21,6 +21,7 @@ class NPCharacter;
 class Object;
 class Skill;
 class Affect;
+class Profession;
 
 /* fight.cpp */
 void        violence_update( );
@@ -38,6 +39,7 @@ void        rawdamage_nocatch( Character *ch, Character *victim, int dam_type, i
 void        damage_to_obj(Character *ch,Object *wield, Object *worn, int damage);
 int        move_dec( Character *ch );
 void damapply_class(Character *ch, int &dam);
+int second_weapon_chance(Profession *prof, Object *weapon);
 
 
 void yell_panic( Character *ch, Character *victim, const char *msgBlind , const char *msg, const char *label = 0 );

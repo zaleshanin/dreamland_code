@@ -32,7 +32,7 @@
 #include "update_areas.h"
 #include "websocketrpc.h"
 
-#include "mercdb.h"
+
 
 #include "redit.h"
 #include "eeedit.h"
@@ -650,8 +650,6 @@ OLCStateRoom::change_exit(PCharacter * ch, const char *cargument, int door)
     }
 
     if (!str_cmp(command, "dig")) {
-        char buf[MAX_STRING_LENGTH];
-
         if (arg[0] == '\0') {
             stc("Syntax: [direction] dig (<vnum> | next)\n\r", ch);
             return false;
@@ -661,8 +659,8 @@ OLCStateRoom::change_exit(PCharacter * ch, const char *cargument, int door)
         if(!newRoom)
             return false;
     
-        sprintf(buf, "link %d", newRoom->vnum);
-        change_exit(ch, buf, door);
+        DLString cmd = fmt(0, "link %d", newRoom->vnum);
+        change_exit(ch, cmd.c_str(), door);
         return true;
     }
 
@@ -863,9 +861,6 @@ OLCStateRoom::redit_create(PCharacter *ch, char *argument)
     pRoom->vnum = value;
     pRoom->areaIndex = get_vnum_area(value);
 
-    if (value > top_vnum_room)
-        top_vnum_room = value;
-
     roomIndexMap[value] = pRoom;
     pRoom->areaIndex->roomIndexes[value] = pRoom;
 
@@ -1001,7 +996,7 @@ REDIT(eexit, "экстравыход", "редактор экстра-выход
         return true;
     }
 
-    findCommand(ch, "eexit")->run(ch, "");
+    findCommand(ch, "eexit")->entryPoint(ch, "");
     return false;
 }
 

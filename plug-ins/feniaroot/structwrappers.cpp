@@ -22,9 +22,11 @@
 #include "desire.h"
 #include "clan.h"
 #include "clantypes.h"
+#include "wearlocation.h"
 #include "spelltarget.h"
 #include "material-table.h"
 #include "material.h"
+#include "fight.h"
 
 #include "nativeext.h"
 #include "regcontainer.h"
@@ -45,7 +47,7 @@
 #include "liquidflags.h"
 #include "damageflags.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "def.h"
 
 using namespace std;
@@ -329,6 +331,20 @@ NMI_GET( ProfessionWrapper, alignName, "русское имя подходяще
     return "любая";
 }
 
+NMI_GET( ProfessionWrapper, minAlign, "нижнее значение диапазона натуры" ) 
+{
+    Profession *prof = professionManager->find( name );
+    return prof->getMinAlign();
+}
+
+NMI_GET( ProfessionWrapper, maxAlign, "верхнее значение диапазона натуры" ) 
+{
+    Profession *prof = professionManager->find( name );
+    return prof->getMaxAlign();
+}
+
+
+
 NMI_INVOKE(ProfessionWrapper, wearModifier, "(type): бонус на уровень владения этим типом предмета (.tables.item_table)")
 {
     int itype = argnum2flag(args, 1, item_table);
@@ -398,11 +414,25 @@ NMI_INVOKE( ProfessionWrapper, goodPersonality, "(ch): проверить огр
     
     ch = wrapper_cast<CharacterWrapper>(args.front( ));
     Profession *prof = professionManager->find( name );
+    
     if (!prof->getEthos( ).isSetBitNumber( ch->getTarget( )->ethos ))
         return false;
     if (!prof->getAlign( ).isSetBitNumber( ALIGNMENT(ch->getTarget( )) ))
         return false;
     return true;
+}
+
+NMI_INVOKE(ProfessionWrapper, secondWeaponChance, "([weapon]): модифiкатор шансу атаки weapon у лiвiй руцi або null для hand to hand")
+{
+    ::Object *weapon;
+
+    if (args.empty() || args.front().type == Register::NONE)
+        weapon = 0;
+    else
+        weapon = argnum2item(args, 1);
+
+    Profession *prof = professionManager->find( name );
+    return Register(second_weapon_chance(prof, weapon));
 }
 
 /*----------------------------------------------------------------------
@@ -629,6 +659,67 @@ NMI_INVOKE( LiquidWrapper, isBooze, "алкоголь ли это" )
 {
     return getTarget()->getFlags().isSet(LIQF_BEER|LIQF_LIQUOR|LIQF_WINE);
 }
+
+/*----------------------------------------------------------------------
+ * Liquid
+ *----------------------------------------------------------------------*/
+NMI_INIT(WearlocWrapper, "wearlocation, слот экипировки");
+
+WearlocWrapper::WearlocWrapper( const DLString &n )
+                  : name( n )
+{
+}
+
+Scripting::Register WearlocWrapper::wrap( const DLString &name )
+{
+    if (!wearlocationManager->findExisting(name))
+        throw Scripting::Exception("Wearloc not found");
+
+    WearlocWrapper::Pointer hw( NEW, name );
+
+    Scripting::Object *sobj = &Scripting::Object::manager->allocate( );
+    sobj->setHandler( hw );
+
+    return Scripting::Register( sobj );
+}
+
+Wearlocation * WearlocWrapper::getTarget() const
+{
+    Wearlocation *wl = wearlocationManager->find(name);
+    if (!wl)
+        throw Scripting::Exception("Wearloc not found");
+    return wl;
+}
+
+NMI_INVOKE( WearlocWrapper, api, "(): печатает этот api" )
+{
+    ostringstream buf;
+
+    Scripting::traitsAPI<WearlocWrapper>( buf );
+    return Scripting::Register( buf.str( ) );
+}
+
+NMI_GET( WearlocWrapper, name, "английское название" ) 
+{
+    return getTarget()->getName( );
+}
+
+NMI_GET( WearlocWrapper, ribName, "название слота с падежами" ) 
+{
+    return getTarget()->getRibName();
+}
+
+NMI_GET( WearlocWrapper, nameRus, "название слота с падежами (то же что ribName)" ) 
+{
+    return getTarget()->getRussianName();
+}
+
+NMI_GET( WearlocWrapper, purpose, "описание Надевается на..." ) 
+{
+    return getTarget()->getPurpose();
+}
+
+
 
 /*----------------------------------------------------------------------
  * Material
@@ -1133,12 +1224,12 @@ NMI_GET( ReligionWrapper, flags, "флаги религий (таблица .tab
     return Register((int)getTarget()->flags.getValue());
 }
 
-NMI_GET( ReligionWrapper, align, "разрешенные натуры или пустая строка (таблица .tables.align_table)" ) 
+NMI_GET( ReligionWrapper, align, "разрешенные натуры или 0 (таблица .tables.align_flags)" ) 
 {
     return Register((int)getTarget()->align.getValue());
 }
 
-NMI_GET( ReligionWrapper, ethos, "разрешенные этосы или пустая строка (таблица .tables.ethos_table)" ) 
+NMI_GET( ReligionWrapper, ethos, "разрешенные этосы или 0 (таблица .tables.ethos_table)" ) 
 {
     return Register((int)getTarget()->ethos.getValue());
 }
@@ -1514,96 +1605,6 @@ NMI_INVOKE(SkillWrapper, dressItem, "(obj,ch[,key]): рестрингнуть п
 
     dress_created_item(getTarget()->getIndex(), item, ch, key);
     return Register();
-}
-
-/*----------------------------------------------------------------------
- * FeniaSkill
- *----------------------------------------------------------------------*/
-NMI_INIT(FeniaSkill, "феневое умение");
-
-FeniaSkill::FeniaSkill( const DLString &n )
-                    : Skill(n)
-{
-    myname = n;
-}
-
-Scripting::Register FeniaSkill::wrap( const DLString &name )
-{
-    FeniaSkill::Pointer hw( NEW, name );
-
-    Scripting::Object *sobj = &Scripting::Object::manager->allocate( );
-    sobj->setHandler( hw );
-    return Scripting::Register( sobj );
-}
-
-void FeniaSkill::setSelf(Scripting::Object *obj)
-{
-    if (obj) {
-        if (!myname.empty()) {
-            this->setName(myname);
-            this->loaded();
-            notice("FeniaSkill loaded: %s.", name.c_str());
-        }
-    } else {
-        if (!myname.empty()) {
-            this->setName(myname);
-            if (this == skillManager->findExisting(name)) {
-                this->unloaded();
-                notice("FeniaSkill unloaded: %s.", name.c_str());
-            }
-        }
-    }
-
-    self = obj;
-}
-
-void FeniaSkill::backup()
-{
-    if (!name.empty() && this == skillManager->findExisting(name)) {
-        this->unloaded();
-        notice("FeniaSkill unloaded on backup: %s.", name.c_str());
-    }
-}
-
-NMI_GET( FeniaSkill, name, "название умения" ) 
-{ 
-    return Register(name); 
-} 
-
-NMI_SET(FeniaSkill, nameRus, "русское название умения")
-{
-    nameRus.setValue(arg.toString());
-    self->changed();
-}
-
-NMI_GET(FeniaSkill, nameRus, "русское название умения")
-{
-    return Register(nameRus);
-}
-
-NMI_SET(FeniaSkill, dammsg, "сообщение о повреждении с падежами через |")
-{
-    dammsg.setFullForm(arg.toString());
-    self->changed();
-}
-
-NMI_GET(FeniaSkill, dammsg, "сообщение о повреждении с падежами через |")
-{
-    return Register(dammsg.getFullForm());
-}
-
-NMI_SET(FeniaSkill, dammsg_gender, "грам.род сообщения о повреждении (m, f, n, p)")
-{
-    dammsg.setGender(Grammar::MultiGender(arg.toString().c_str()));
-    self->changed();
-}
-
-NMI_INVOKE(FeniaSkill, api, "(): печатает этот api")
-{
-    ostringstream buf;
-    
-    Scripting::traitsAPI<FeniaSkill>( buf );
-    return Scripting::Register( buf.str( ) );
 }
 
 

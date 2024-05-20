@@ -14,12 +14,11 @@
 #include "xmlattributeplugin.h"
 #include "xmlattribute.h"
 #include "commandplugin.h"
-#include "defaultcommand.h"
 #include "descriptorstatelistener.h"
 
 class Character;
 
-class Confirm : public CommandPlugin, public DefaultCommand {
+class Confirm : public CommandPlugin {
 XML_OBJECT
 public:
         typedef ::Pointer<Confirm> Pointer;

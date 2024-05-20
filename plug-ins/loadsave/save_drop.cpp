@@ -13,6 +13,7 @@
  *    и все остальные, кто советовал и играл в этот MUD                    *
  ***************************************************************************/
 
+#include <string.h>
 #include "fileformatexception.h"
 #include "logstream.h"
 
@@ -25,7 +26,7 @@
 #include "loadsave.h"
 #include "fread_utils.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "def.h"
 
 GSN(doppelganger);

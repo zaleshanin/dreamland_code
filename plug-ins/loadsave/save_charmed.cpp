@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <set>
+#include <string.h>
 
 #include "fileformatexception.h"
 #include "logstream.h"
@@ -17,7 +18,7 @@
 #include "save.h"
 #include "fread_utils.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "def.h"
 
 const char * DIR_SAVED_CHARMED = "charmed";
@@ -61,11 +62,7 @@ static DLString make_dirname( int dirnum )
 int
 mymkdir(const char *path, int perm) 
 {
-#ifdef __MINGW32__
-    return mkdir(path);
-#else
     return mkdir(path, perm);
-#endif
 }
 
 void save_creature( NPCharacter *ch )

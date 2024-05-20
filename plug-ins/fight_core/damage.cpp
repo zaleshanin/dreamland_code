@@ -2,6 +2,8 @@
  * 
  * ruffina, 2004
  */
+#include <string.h>
+
 #include "damage.h"
 #include "damageflags.h"
 
@@ -27,7 +29,7 @@
 #include "act.h"
 #include "wiznet.h"
 #include "occupations.h"
-#include "mercdb.h"
+
 #include "merc.h"
 #include "vnum.h"
 #include "follow_utils.h"

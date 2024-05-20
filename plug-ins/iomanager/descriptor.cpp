@@ -4,20 +4,11 @@
  */
 #include <errno.h>
 #include <fcntl.h>
-
+#include <string.h>
 #include <algorithm>
 #include <openssl/sha.h>
-
-#ifndef __MINGW32__
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#else
-#include <winsock.h>
-
-#ifndef EWOULDBLOCK
-#define EWOULDBLOCK WSAEWOULDBLOCK
-#endif
-#endif
 
 #include "json/json.h"
 #include "math_utils.h"
@@ -35,7 +26,7 @@
 #include "outofband.h"
 #include "backdoorhandler.h"
 
-#include "char.h"
+
 #include "dreamland.h"
 #include "ban.h"
 #include "descriptor.h"
@@ -43,7 +34,7 @@
 #include "objectbehavior.h"
 #include "room.h"
 #include "object.h"
-#include "mercdb.h"
+
 #include "loadsave.h"
 #include "interp.h"
 #include "telnet.h"
@@ -244,12 +235,10 @@ int Descriptor::inputTelnet( unsigned char i )
             
         case DO:
             switch (i) {
-#ifdef MCCP
                 case TELOPT_COMPRESS:
                 case TELOPT_COMPRESS2:
                     startMccp(i);
                     break;
-#endif
                 case GMCP:
                     outOfBandManager->run("protoInit", ProtoInitArgs(this, "GMCP"));
                     break;
@@ -270,13 +259,11 @@ int Descriptor::inputTelnet( unsigned char i )
 
         case DONT:
             switch (i) {
-#ifdef MCCP
                 case TELOPT_COMPRESS:
                 case TELOPT_COMPRESS2:
                     if (compressing == i)
                         stopMccp();
                     break;
-#endif
             }
             telnet.state = TNS_NORMAL;
             break;
@@ -290,19 +277,6 @@ int Descriptor::inputTelnet( unsigned char i )
 }
 
 
-#ifdef __MINGW32__
-static int
-hasmore(int fd)
-{ 
-    fd_set fds;
-    timeval tv = { 0, 0 };
-
-    FD_ZERO(&fds);
-    FD_SET(fd, &fds);
-
-    return select(fd+1, &fds, 0, 0, &tv);
-}
-#endif
 
 bool 
 Descriptor::wsHandlePassThrough(unsigned char *buf, int rc)
@@ -348,7 +322,7 @@ RPCRUN(editor_save)
 
     if(pch) {
         pch->getAttributes().handleEvent(WebEditorSaveArguments(pch, text));
-        LogStream::sendError() << "editor_save: " << text << endl;
+        LogStream::sendNotice() << "editor_save: " << text << endl;
         mprog_editorsave(pch, text);
     }
 }
@@ -589,14 +563,7 @@ bool Descriptor::readInput( )
     for(;;) {
         int rc;
 
-#ifdef __MINGW32__
-        if(hasmore(descriptor) == 0)
-            break;
-        
-        rc = ::recv(descriptor, (char *)buf, sizeof(buf), 0);
-#else
         rc = read(descriptor, (char *)buf, sizeof(buf));
-#endif
 
         if ( rc > 0 ) {
             switch(websock.state) {

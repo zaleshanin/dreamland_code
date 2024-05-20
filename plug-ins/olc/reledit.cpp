@@ -19,7 +19,7 @@
 #include "arg_utils.h"
 #include "interp.h"
 #include "act.h"
-#include "mercdb.h"
+
 #include "def.h"
 
 OLC_STATE(OLCStateReligion);
@@ -311,12 +311,12 @@ CMD(reledit, 50, "", POS_DEAD, 103, LOG_ALWAYS, "Online religion editor.")
     }
 
     if (arg_oneof(cmd, "tattoo", "татуировка") || arg_oneof(cmd, "mark", "знак")) {
-        ch->send_to(dlprintf(
+        ch->send_to(fmt(0, 
             "{C%-15s %-17s %-6s %s{x\r\n", "Название", "Русское имя", "VNUM", "Описание"));        
 
         const DLString lineFormat = 
-            web_cmd(ch, "reledit $1", "%-15s") 
-                + " %-17s {W"
+           "{W" + web_cmd(ch, "reledit $1", "%-15s") 
+                + "{w %-17s {W"
                 + web_cmd(ch, "oedit $1", "%-6d")
                 + "{x %s"
                 + "{x\r\n";         
@@ -335,13 +335,13 @@ CMD(reledit, 50, "", POS_DEAD, 103, LOG_ALWAYS, "Online religion editor.")
                 pObj = get_obj_index(rel->tattooVnum);
 
             if (pObj)
-                ch->send_to(dlprintf(lineFormat.c_str(),
+                ch->send_to(fmt(0, lineFormat.c_str(),
                         rel->getShortDescr().c_str(),
                         rel->getRussianName().ruscase('1').c_str(),
                         pObj->vnum,
                         russian_case(pObj->short_descr, '1').c_str()));
             else
-                ch->send_to(dlprintf(lineFormatNoTattoo.c_str(),
+                ch->send_to(fmt(0, lineFormatNoTattoo.c_str(),
                         rel->getShortDescr().c_str(),
                         rel->getRussianName().ruscase('1').c_str()));
         }
@@ -349,17 +349,17 @@ CMD(reledit, 50, "", POS_DEAD, 103, LOG_ALWAYS, "Online religion editor.")
     }
 
     if (arg_is_list(cmd)) {
-        ch->send_to(dlprintf("{C%-15s %-17s %-3s {Y%-3s   %-3s %1s %1s{x\r\n", "Название", "Русское имя", "SEX", "ALG", "ETH", "R", "C"));
+        ch->send_to(fmt(0, "{C%-15s %-17s %-3s {Y%-3s   %-3s %1s %1s{x\r\n", "Название", "Русское имя", "SEX", "ALG", "ETH", "R", "C"));
 
         const DLString lineFormat = 
-            web_cmd(ch, "reledit $1", "%-15s") + " %-17s %-3s %1s%1s%1s   %1s%1s%1s %1s %1s{x\r\n";
+            "{W" + web_cmd(ch, "reledit $1", "%-15s") + "{w %-17s %-3s %1s%1s%1s   %1s%1s%1s %1s %1s{x\r\n";
 
         for (int r = 0; r < religionManager->size(); r++) {
             DefaultReligion *rel = dynamic_cast<DefaultReligion *>(religionManager->find(r));
             if (!religion_valid(rel))
                 continue;
 
-            ch->send_to(dlprintf(lineFormat.c_str(),
+            ch->send_to(fmt(0, lineFormat.c_str(),
                     rel->getShortDescr().c_str(),
                     rel->getRussianName().ruscase('1').c_str(),
                     rel->getSex() == SEX_MALE ? "M" : "F",

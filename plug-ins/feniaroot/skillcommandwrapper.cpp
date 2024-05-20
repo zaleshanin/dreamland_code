@@ -10,7 +10,7 @@
 
 #include "core/object.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "loadsave.h"
 #include "def.h"
 
@@ -86,7 +86,6 @@ NMI_GET( SkillCommandWrapper, skill, "навык, внутри которого 
     checkTarget( ); 
     return Register::handler<SkillWrapper>(target->getSkill()->getName());
 }
-
 
 NMI_INVOKE( SkillCommandWrapper, api, "(): печатает этот API" )
 {

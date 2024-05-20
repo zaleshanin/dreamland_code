@@ -34,7 +34,7 @@
 #include "interp.h"
 #include "comm.h"
 #include "save.h"
-#include "mercdb.h"
+
 #include "fight.h"
 #include "skill_utils.h"
 #include "immunity.h"
@@ -54,6 +54,7 @@
 #include "act.h"
 #include "selfrate.h"
 #include "religionutils.h"
+#include "websocketrpc.h"
 
 #include "objectwrapper.h"
 #include "roomwrapper.h"
@@ -328,6 +329,15 @@ NMI_GET( CharacterWrapper, terminal_type, "тип терминала у mud-кл
     if (!target->desc)
         return "";
     return ttype_name( target->desc->telnet.ttype );
+}
+
+NMI_GET( CharacterWrapper, webclient, "true если использует вебклиент" )
+{
+    checkTarget( );
+    CHK_NPC
+    if (!target->desc)
+        return false;
+    return is_websock(target);
 }
 
 NMI_GET( CharacterWrapper, attack_name, "англ название типа атаки (таблица в коде attack_table)")
@@ -690,20 +700,6 @@ NMI_GET( CharacterWrapper, good, "true если персонаж добрый" )
     return IS_GOOD(target);
 }
 
-NMI_GET( CharacterWrapper, alignMin, "название самой злой натуры для расы и класса персонажа" )
-{
-    checkTarget( );
-    CHK_NPC
-    return align_min( target->getPC( ) );
-}
-
-NMI_GET( CharacterWrapper, alignMax, "название самой доброй натуры для расы и класса персонажа" )
-{
-    checkTarget( );
-    CHK_NPC
-    return align_max( target->getPC( ) );
-}
-
 NMI_GET( CharacterWrapper, alignName, "название натуры" )
 {
     checkTarget( );
@@ -810,6 +806,7 @@ INT_FIELD(vuln_flags, "флаги уязвимости (таблица .tables.r
 INT_FIELD(affected_by, "флаги аффектов (таблица .tables.affect_flags)")
 INT_FIELD(detection, "флаги детектов (таблица .tables.detect_flags)")
 INT_FIELD(position, "позиция (таблица .tables.position_table)")
+INT_FIELD(posFlags, "флаги позиции (таблица .tables.position_flags)")
 INT_FIELD(carry_number, "количество вещей которое несет чар")
 INT_FIELD(saving_throw, "савесы")
 INT_FIELD(alignment, "натура, от -1000 до 1000")
@@ -2347,7 +2344,7 @@ NMI_INVOKE( CharacterWrapper, add_charmed, "(victim,time): очаровать vi
 
     follower_add(victim, target);
     victim->leader = target;
-
+    
     af.bitvector.setTable(&affect_flags);
     af.type      = gsn_charm_person;
     af.level     = target->getRealLevel( );
@@ -2388,7 +2385,8 @@ NMI_INVOKE( CharacterWrapper, add_pet, "(pet): добавить пета нам 
     if (pet->master)
         follower_stop(pet);
 
-    SET_BIT( pet->affected_by, AFF_CHARM );
+    affect_add_charm(pet);
+
     target->getPC( )->pet = pet->getNPC( );
     follower_add( pet, target );
     pet->leader = target;
@@ -2698,6 +2696,23 @@ NMI_INVOKE(CharacterWrapper, restring, "(skill,key,names,short,long,extra): ус
 
     target->getPC( )->save( );
     return Register( );
+}
+
+NMI_INVOKE(CharacterWrapper, behaviorMethod, "(methodName, args...): вызвать метод MobileBehavior с аргументами")
+{
+    checkTarget();
+    CHK_PC
+    DLString methodName = argnum2string(args, 1);
+
+    if (methodName == "shot") {
+        Character *attacker = argnum2character(args, 2);
+        int door = argnum2number(args, 3);
+        if (target->getNPC()->behavior)
+            target->getNPC()->behavior->shot(attacker, door);
+        return Register();
+    }
+
+    throw Scripting::Exception(methodName + " behavior method not supported yet");
 }
 
 NMI_INVOKE(CharacterWrapper, trigger, "(trigName, trigArgs...): вызвать триггер у персонажа или прототипа")

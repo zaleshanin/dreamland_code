@@ -35,7 +35,7 @@
 #include "handler.h"
 #include "act.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "def.h"
 
 GSN(lore);
@@ -274,8 +274,6 @@ static bool has_trigger_use( Object *obj )
     FENIA_HAS_TRIGGER(obj, "Use");
     FENIA_NDX_HAS_TRIGGER(obj, "Use");
     
-    // TODO skillevent handlers (not implemented anywhere yet)
-
     // See if item's behavior declares itself as handling 'use' command.
     if (obj_has_trigger( obj, "use" ))
         return true;

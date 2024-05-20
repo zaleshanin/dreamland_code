@@ -3,6 +3,8 @@
  * ruffina, 2004
  */
 #include <math.h>
+#include <string.h>
+
 #include "logstream.h"
 #include "core/object.h"
 #include "npcharacter.h"
@@ -27,12 +29,13 @@
 #include "weapongenerator.h"
 #include "weapontier.h"
 #include "act.h"
-#include "mercdb.h"
+
 #include "merc.h"
 #include "damageflags.h"
 #include "../anatolia/handler.h"
 #include "calendar_utils.h"
 #include "material-table.h"
+#include "stats_apply.h"
 
 #include "root.h"
 #include "nannyhandler.h"
@@ -54,6 +57,7 @@
 #include "tableswrapper.h"
 #include "schedulerwrapper.h"
 #include "commandwrapper.h"
+#include "areaquestwrapper.h"
 #include "codesource.h"
 #include "subr.h"
 #include "fenia/handler.h"
@@ -1086,6 +1090,12 @@ NMI_INVOKE( Root, Liquid, "(name): конструктор для жидкост�
     return LiquidWrapper::wrap( name.empty( ) ? "none" : name );
 }
 
+NMI_INVOKE( Root, Wearloc, "(name): конструктор для слота экипировки по имени" )
+{
+    DLString name = args2string(args);
+    return WearlocWrapper::wrap(name);
+}
+
 NMI_GET( Root, materials, "список всех материалов") 
 {
     RegList::Pointer list(NEW);
@@ -1152,20 +1162,6 @@ NMI_INVOKE( Root, Skill, "(name|gsn): конструктор для умения
     return Register::handler<SkillWrapper>(skill->getName());
 }
 
-NMI_INVOKE( Root, FeniaSkill, "(name): конструктор для нового умения" )
-{
-    DLString name = args2string(args);
-    Skill *skill = skillManager->findExisting(name);
-
-    if (skill && skill->isValid())
-        throw Scripting::Exception(name + ": skill already exists.");
-
-    if (!normalize_skill_name(name))
-        throw Scripting::Exception("Skill name can only consist of letters and spaces");
-
-    return FeniaSkill::wrap(name);
-}
-
 NMI_INVOKE( Root, SkillGroup, "(name): конструктор для группы умений по имени" )
 {
     DLString name = args2string(args);
@@ -1184,9 +1180,26 @@ NMI_INVOKE( Root, Clan, "(name): конструктор для клана по �
     return ClanWrapper::wrap( name );
 }
 
-NMI_INVOKE( Root, Command, "(): конструктор для команды" )
+NMI_INVOKE( Root, Command, "(): конструктор для команды, OBSOLETE" )
 {
     return Register::handler<CommandWrapper>();
+}
+
+NMI_INVOKE( Root, FeniaCommand, "(name): конструктор для команды по заданному имени" )
+{
+    WrappedCommand *cmd = argnum2command(args, 1);
+    return WrapperManager::getThis( )->getWrapper(cmd);
+}
+
+NMI_INVOKE( Root, AreaQuest, "(vnum): конструктор для арийного квеста по его внуму" )
+{
+    int vnum = argnum2number(args, 1);
+    auto q = areaQuests.find(vnum);
+
+    if (q == areaQuests.end())
+        throw Scripting::Exception("Unknown area quest vnum");
+
+    return WrapperManager::getThis()->getWrapper(q->second);
 }
 
 NMI_GET( Root, players, "список (List) всех игроков") 
@@ -1398,4 +1411,34 @@ NMI_INVOKE(Root, interpolate, "(x, x1, x2, y1, y2): линейно интерп�
     int y2 = argnum2number(args, 5);
 
     return Register((int)linear_interpolation(x, x1, x2, y1, y2));
+}
+
+NMI_INVOKE(Root, get_str_app, "(ch): доступ до json-таблицi str_app для персонажа")
+{
+    Character *ch = argnum2character(args, 1);
+    const str_app_type &entry = get_str_app(ch);
+
+    ::Pointer<RegContainer> rc(NEW);
+    (*rc)->map["hit"] = Register(entry.hit);
+    (*rc)->map["missile"] = Register(entry.missile);
+    (*rc)->map["carry"] = Register(entry.carry);
+    (*rc)->map["wield"] = Register(entry.wield);
+    (*rc)->map["web"] = Register(entry.web);
+    (*rc)->map["damage"] = Register(entry.damage);
+
+    Scripting::Object *obj = &Scripting::Object::manager->allocate();
+    obj->setHandler(rc);
+    return Register( obj );    
+}
+
+NMI_INVOKE(Root, help, "(id): вернуть сырой текст статьи справки по id или исключение")
+{
+    int id = argnum2number(args, 1);
+    HelpArticle::Pointer article = helpManager->getArticle(id);
+
+    if (article.isEmpty())
+        throw Scripting::Exception("Help article with this ID not found");
+
+    DLString text = article->getText();
+    return Register(text); 
 }

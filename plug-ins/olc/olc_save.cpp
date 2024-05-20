@@ -2,6 +2,7 @@
  *
  * ruffina, 2004
  */
+#include <string.h>
 
 #include "olc.h"
 #include "onlinecreation.h"
@@ -10,7 +11,7 @@
 #include "dreamland.h"
 #include "room.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "def.h"
 
 void
@@ -41,7 +42,7 @@ bool save_xmlarea(struct area_file *af, Character *ch)
         a.save(af);
     } catch (const ExceptionDBIO &ex) {
         if (ch)
-            ch->printf("{RERROR:{x: %s\r\n", ex.what());
+            ch->pecho("{RERROR:{x: %s", ex.what());
 
         return false;
     }

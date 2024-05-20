@@ -14,7 +14,6 @@
 #define CCLAN_H
 
 #include "commandplugin.h"
-#include "defaultcommand.h"
 
 class PCharacter;
 class PCMemoryInterface;
@@ -23,7 +22,7 @@ class Clan;
 /**
  * @author Igor S. Petrenko
  */
-class CClan : public CommandPlugin, public DefaultCommand
+class CClan : public CommandPlugin
 {
 XML_OBJECT;
 public:

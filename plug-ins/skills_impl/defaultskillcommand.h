@@ -6,7 +6,7 @@
 #define DEFAULTSKILLCOMMAND_H
 
 #include "skillcommand.h"
-#include "defaultcommand.h"
+#include "command.h"
 
 class Object;
 struct CommandTarget {
@@ -21,7 +21,7 @@ struct CommandTarget {
     DLString doorOrExtraExit;
 };
 
-class DefaultSkillCommand : public DefaultCommand, public SkillCommand {
+class DefaultSkillCommand : public Command, public SkillCommand {
 XML_OBJECT
 public:
     typedef ::Pointer<DefaultSkillCommand> Pointer;
@@ -29,6 +29,8 @@ public:
     DefaultSkillCommand( );
 
     virtual long long getID() const;
+        
+    virtual bool saveCommand() const;
 
     virtual void setSkill( SkillPointer );
     virtual void unsetSkill( );

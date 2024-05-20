@@ -15,7 +15,7 @@
 #include "act.h"
 #include "loadsave.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "def.h"
 
 GROUP(clan);
@@ -139,7 +139,7 @@ void DefaultSkillGroup::listSkills( PCharacter *ch, ostringstream &buf ) const
                 id = DLString(skill->getSkillHelp()->getID());
 
             DLString skillName = skill->getNameFor(ch) + "{hx";
-            buf << "{hh" << id << dlprintf(autopattern, skillName.c_str());
+            buf << "{hh" << id << fmt(0, autopattern, skillName.c_str());
 
         } else {
             buf << fmt(0, pattern, getSkillColor(skill, ch), skill->getNameFor(ch).c_str());

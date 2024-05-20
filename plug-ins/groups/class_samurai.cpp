@@ -12,8 +12,9 @@
  *    Andreyanov Aleksandr {Manwe}                                         *
  *    и все остальные, кто советовал и играл в этот MUD                    *
  ***************************************************************************/
-#include "class_samurai.h"
+#include <string.h>
 
+#include "class_samurai.h"
 
 #include "skill.h"
 #include "spelltemplate.h"
@@ -30,7 +31,7 @@
 
 
 #include "act_move.h"
-#include "mercdb.h"
+
 #include "magic.h"
 #include "skill_utils.h"
 #include "fight.h"
@@ -233,7 +234,6 @@ SKILL_RUNP( katana )
         Affect af;
         Object *part;
         char arg[MAX_INPUT_LENGTH];
-        char buf[MAX_STRING_LENGTH];
 
         one_argument( argument, arg );
 
@@ -297,10 +297,10 @@ SKILL_RUNP( katana )
                     .assignStartingHitroll()
                     .assignStartingDamroll();
 
-                sprintf( buf,katana->pIndexData->extra_descr->description,ch->getNameC() );
+                DLString ed = fmt(0, katana->pIndexData->extra_descr->description,ch->getNameC() );
                 katana->extra_descr = new_extra_descr();
                 katana->extra_descr->keyword =str_dup(katana->pIndexData->extra_descr->keyword );
-                katana->extra_descr->description = str_dup( buf );
+                katana->extra_descr->description = str_dup( ed.c_str() );
                 katana->extra_descr->next = 0;
         
                 obj_to_char(katana, ch);

@@ -43,7 +43,6 @@ class NPCharacterManager;
 class ObjectManager;
 class DLScheduler;
 class RaceManager;
-class RaceLanguageManager;
 class SkillManager;
 class ClanManager;
 class ProfessionManager;
@@ -102,6 +101,7 @@ public:
         inline DLDirectory getPlayerRemortDir( ) const;
         inline DLDirectory getPlayerBackupDir( ) const;
         inline DLDirectory getFeniaScriptDir() const;
+        inline DLDirectory getFeniaPublicScriptDir() const;
         inline const DLString& getTempFile( ) const;
         inline const DLString& getImmLogFile( ) const;
         inline const DLString& getShutdownFile( ) const;
@@ -177,6 +177,7 @@ private:
 
         XML_VARIABLE XMLString feniaDbDir;
         XML_VARIABLE XMLString feniaScriptDir;
+        XML_VARIABLE XMLString feniaPublicScriptDir;
 
         XML_VARIABLE XMLLong   bootVersion;
         XML_VARIABLE XMLLong   worldTime;
@@ -189,7 +190,6 @@ private:
         ::Pointer<PCharacterManager> pcharacterManager;
         ::Pointer<NPCharacterManager> npcharacterManager;
         ::Pointer<RaceManager> raceManager;
-        ::Pointer<RaceLanguageManager> raceLanguageManager;
         ::Pointer<SkillManager> skillManager;
         ::Pointer<ClanManager> clanManager;
         ::Pointer<ProfessionManager> professionManager;

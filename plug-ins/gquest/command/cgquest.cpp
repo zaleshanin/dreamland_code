@@ -2,6 +2,7 @@
  *
  * ruffina, 2003
  */
+#include <string.h>
 
 #include "logstream.h"
 #include "cgquest.h"
@@ -23,7 +24,7 @@
 #include "pcharactermanager.h"
 #include "act.h"
 #include "loadsave.h"
-#include "mercdb.h"
+
 #include "merc.h"
 #include "def.h"
 
@@ -278,7 +279,7 @@ void CGQuest::doStat( PCharacter *ch )
         for (r = records.begin( ); r != records.end( ) && cnt < 10; cnt++) {
             last = r->second;
             buf << pad << GQChannel::BOLD 
-                << dlprintf( "%4d", last ) << GQChannel::NORMAL << " ";
+                << fmt(0, "%4d", last ) << GQChannel::NORMAL << " ";
 
             for ( ; r != records.end( ) && r->second == last; r++)
                 buf << r->first << " ";
@@ -294,49 +295,49 @@ void CGQuest::doStat( PCharacter *ch )
 
 void CGQuest::doList( PCharacter *ch ) 
 {
-    char buf[MAX_STRING_LENGTH];
     GlobalQuestManager::RegistryList::iterator i;
     GlobalQuestManager::RegistryList& reg = GlobalQuestManager::getThis( )->getRegistry( );
 
-    sprintf( buf, "%sСписок глобальных квестов Мира Грез\r\n", GQChannel::NORMAL );
-    ch->send_to( buf );
+    ch->pecho("%sСписок глобальных квестов Мира Грез", GQChannel::NORMAL );
    
-    sprintf( buf, "%s%-10s %-10s %s %-4s %s %7s %9s %s%s\r\n",
+    ch->pecho("%s%-10s %-10s %s %-4s %s %7s %9s %s%s",
             GQChannel::BOLD, "Название", "ID", "A", "idle", "R", "Уровни", "Время", "Описание", GQChannel::NORMAL );
-    ch->send_to( buf );
-    
+
+    ostringstream buf;
+
     for (i = reg.begin( ); i != reg.end( ); i++) {
         GlobalQuestInfo::Pointer gqip = i->second;
         GlobalQuest::Pointer gq = GlobalQuestManager::getThis( )->findGlobalQuest( gqip->getQuestID( ) );
 
-        sprintf( buf, "%s%-10.10s %-10s ",
+        buf << fmt(0, "%s%-10.10s %-10s ",
                 GQChannel::NORMAL,
                 gqip->getQuestName( ).c_str( ),
                 gqip->getQuestID( ).c_str( ));
 
         if (gqip->getAutostart( ))
-            sprintf( buf + strlen(buf), "* %-4d", (int)(gqip->getWaitingTime( ) / 60));
+            buf << fmt(0, "* %-4d", (int)(gqip->getWaitingTime( ) / 60));
         else 
-            strcat( buf, "      " );
+            buf << "      " ;
 
         if (gq) {
-            sprintf( buf + strlen(buf), " * " );
+            buf << " * " ;
 
             if (gq->hasLevels( ))
-                sprintf( buf + strlen(buf), "%3d-%-3d",
+                buf << fmt(0, "%3d-%-3d",
                          gq->getMinLevel( ), gq->getMaxLevel( ));
             else
-                sprintf( buf + strlen(buf), "%7s", "" );
+                buf << fmt(0, "%7s", "" );
             
-            sprintf( buf + strlen(buf), " %4d/%-4d",
+            buf << fmt(0, " %4d/%-4d",
                                      gq->getElapsedTime( ), gq->getTotalTime( ));
         }
         else 
-            sprintf(buf + strlen(buf), "%-2s %7s %9s", "", "", "");
+            buf << fmt(0, "%-2s %7s %9s", "", "", "");
         
-        sprintf(buf + strlen(buf), " %s{x\r\n", gqip->getQuestShortDescr( ).c_str( ) );
-        ch->send_to( buf );
+        buf << fmt(0, " %s{x\r\n", gqip->getQuestShortDescr( ).c_str( ) );
     }
+
+    ch->send_to( buf );
 
     ch->send_to( "\r\nПоля: "
                  "A - автостарт, "
@@ -416,14 +417,14 @@ void CGQuest::doTime( PCharacter *ch, DLString& arguments )
         int newTotalTime = arguments.getOneArgument( ).toInt( );
         int minTotalTime = gq->getElapsedTime( ) + 1;
         if (newTotalTime < minTotalTime) {
-            ch->printf( "Неверное время, минимум %d минут.\r\n", minTotalTime );
+            ch->pecho( "Неверное время, минимум %d минут.", minTotalTime );
             return;
         }
 
         gq->suspend( );
         gq->setTotalTime( newTotalTime );
         gq->resume( );
-        ch->printf( "Новое время квеста %d минут, до конца остается %d минут.\r\n",
+        ch->pecho( "Новое время квеста %d минут, до конца остается %d минут.",
                 gq->getTotalTime( ), gq->getRemainingTime( ) );
     }  catch (const Exception &e) {
         ch->send_to( e.what( ) );

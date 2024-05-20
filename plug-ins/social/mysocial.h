@@ -6,10 +6,9 @@
 #define __MYSOCIAL_H__
 
 #include "commandplugin.h"
-#include "defaultcommand.h"
 #include "customsocial.h"
 
-class MySocial : public CommandPlugin, public DefaultCommand {
+class MySocial : public CommandPlugin {
 XML_OBJECT
 public:
     typedef ::Pointer<MySocial> Pointer;

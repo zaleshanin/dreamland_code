@@ -11,7 +11,7 @@
 #include "fileformatexception.h"
 #include "room.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "dreamland.h"
 #include "def.h"
 
@@ -157,6 +157,9 @@ XMLArea::init(area_file *af)
 
     areadata.init(area);
 
+    for (auto &q: area->quests)
+        quests.push_back(*q);
+
     MOB_INDEX_DATA *pMobIndex;
     for (int v = area->min_vnum; v <= area->max_vnum; v++) {
         pMobIndex = get_mob_index(v);
@@ -241,8 +244,6 @@ XMLArea::load_rooms(AreaIndexData *a)
         if(3000 <= vnum && vnum < 3400)
             SET_BIT(room->room_flags, ROOM_LAW);
 
-        top_vnum_room = top_vnum_room < vnum ? vnum : top_vnum_room;    /* OLC */
-
         roomIndexMap[vnum] = room;
         room->areaIndex->roomIndexes[vnum] = room;
 
@@ -273,9 +274,6 @@ XMLArea::load_mobiles(AreaIndexData *a)
         if (FeniaManager::wrapperManager)
             FeniaManager::wrapperManager->linkWrapper( pMobIndex );
 
-        newmobs++;
-        top_mob_index++;
-        top_vnum_mob = top_vnum_mob < vnum ? vnum : top_vnum_mob;
         kill_table[URANGE(0, pMobIndex->level, MAX_LEVEL-1)].number++;
     }
 }
@@ -300,10 +298,17 @@ XMLArea::load_objects(AreaIndexData *a)
         
         if (FeniaManager::wrapperManager)
             FeniaManager::wrapperManager->linkWrapper( pObjIndex );
+    }
+}
 
-        newobjs++;
-        top_obj_index++;
-        top_vnum_obj = top_vnum_obj < vnum ? vnum : top_vnum_obj;       /* OLC */
+void XMLArea::load_quests(AreaIndexData *a)
+{
+    for (auto &q: quests) {
+        a->quests.push_back(*q);
+        a->questMap[q->vnum.getValue()] = *q;
+        q->pAreaIndex = a;
+
+        areaQuests[q->vnum] = *q;
     }
 }
 
@@ -336,6 +341,7 @@ XMLArea::load(const DLString &fname)
             load_mobiles(a);
             load_objects(a);
             load_helps(a);
+            load_quests(a);
         }
     } catch (const Exception &ex) {
         LogStream::sendFatal() << ex.what() << endl;

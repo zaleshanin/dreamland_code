@@ -5,17 +5,9 @@
 
 #include <errno.h>
 #include <fcntl.h>
-
-#ifndef __MINGW32__
+#include <string.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#else
-#include <winsock.h>
-
-#ifndef EWOULDBLOCK
-#define EWOULDBLOCK WSAEWOULDBLOCK
-#endif
-#endif
 
 #include "serversocketcontainer.h"
 #include "wrapperhandler.h"
@@ -28,7 +20,7 @@
 #include "comm.h"
 
 #include "logstream.h"
-#include "char.h"
+
 #include "dreamland.h"
 #include "ban.h"
 #include "descriptor.h"
@@ -37,7 +29,7 @@
 #include "room.h"
 #include "helpmanager.h"
 #include "object.h"
-#include "mercdb.h"
+
 #include "loadsave.h"
 #include "interp.h"
 #include "telnet.h"
@@ -49,10 +41,8 @@
 
 
 const unsigned char eor_on_str[] = { IAC, WILL, TELOPT_EOR };
-#ifdef MCCP
 const unsigned char compress_on_str[] = { IAC, WILL, TELOPT_COMPRESS };
 const unsigned char compress2_on_str[] = { IAC, WILL, TELOPT_COMPRESS2 };
-#endif
 const unsigned char via_qry_str[]  = { IAC, WILL, TELOPT_VIA };
 const unsigned char ttype_do_str[] = { IAC, DO, TELOPT_TTYPE };
 const unsigned char gmcp_on_str[] = { IAC, WILL, GMCP };
@@ -90,11 +80,7 @@ void init_descriptor( int control )
     Descriptor *dnew;
     struct sockaddr_in sock;
     int desc, x;
-#ifdef __MINGW32__
-    int size;
-#else
     socklen_t size;
-#endif
 
     size = sizeof(sock);
     getsockname( control, (struct sockaddr *) &sock, &size );
@@ -108,7 +94,6 @@ void init_descriptor( int control )
 #define FNDELAY O_NDELAY
 #endif
 
-#ifndef __MINGW32__
     if ( fcntl( desc, F_SETFL, FNDELAY ) < 0 ) {
         LogStream::sendError( ) << "New_descriptor: fcntl: FNDELAY::" << strerror( errno ) << endl;
         return;
@@ -120,7 +105,6 @@ void init_descriptor( int control )
         close( desc );
         return;
     }
-#endif
 
     if (!ServerSocketContainer::isAllowed(control, sock)) {
         close( desc );
@@ -174,10 +158,8 @@ void init_descriptor( int control )
 
     if(dnew->websock.state != WS_NEGOTIATING) {
         dnew->writeFd(eor_on_str, sizeof(eor_on_str));
-#ifdef MCCP
         dnew->writeFd(compress2_on_str, sizeof(compress2_on_str));
         dnew->writeFd(compress_on_str, sizeof(compress_on_str));
-#endif
         dnew->writeFd(via_qry_str, sizeof(via_qry_str));
         dnew->writeFd(ttype_do_str, sizeof(ttype_do_str));
         dnew->writeFd(gmcp_on_str, sizeof(gmcp_on_str));

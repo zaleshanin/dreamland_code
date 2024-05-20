@@ -2,15 +2,17 @@
  *
  * ruffina, 2004
  */
+#include <string.h>
 
 #include "register-impl.h"
 #include "reglist.h"
 #include "morphology.h"
-#include "char.h"
+
 #include "dl_strings.h"
 #include "dl_ctype.h"
 #include "stringlist.h"
 #include "format.h"
+#include "mudtags.h"
 #include "regexp.h"
 #include "nativeext.h"
 #include "fenia/exceptions.h"
@@ -19,6 +21,7 @@
 #include "idcontainer.h"
 #include "regcontainer.h"
 #include "reglist.h"
+#include "def.h"
 
 namespace Scripting {
 
@@ -255,6 +258,12 @@ NMI_INVOKE(FeniaString, stripColour, "(): удаляет все символы �
     return rc;
 }
 
+NMI_INVOKE(FeniaString, stripTags, "(): удаляет все специальные теги и цвета")
+{
+    ostringstream buf;
+    mudtags_convert(c_str(), buf, TAGS_CONVERT_VIS|TAGS_CONVERT_COLOR|TAGS_ENFORCE_NOCOLOR);
+    return buf.str();
+}
 
 NMI_INVOKE(FeniaString, contains, "(words): true если эта строка содержит одно из слов из строки words")
 {
@@ -370,7 +379,7 @@ NMI_INVOKE(FeniaString, toLower, "(): переводит всю строку в 
     for( DLString::size_type pos = 0; pos < s.length( ); pos++ )
     {
             char& ch = s.at( pos );
-            ch = Char::lower( ch );
+            ch = dl_tolower( ch );
     }
     return s;
 }
@@ -381,7 +390,7 @@ NMI_INVOKE(FeniaString, toUpper, "(): переводит всю строку в 
     for( DLString::size_type pos = 0; pos < s.length( ); pos++ )
     {
             char& ch = s.at( pos );
-            ch = Char::upper( ch );
+            ch = dl_toupper( ch );
     }
     return s;
 }

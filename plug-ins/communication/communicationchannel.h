@@ -7,15 +7,17 @@
 
 #include "xmlinteger.h"
 #include "xmlenumeration.h"
-#include "defaultcommand.h"
+#include "command.h"
 
-class CommunicationChannel : public DefaultCommand {
+class CommunicationChannel : public virtual Command {
 XML_OBJECT
 public:
     typedef ::Pointer<CommunicationChannel> Pointer;
     
     CommunicationChannel( );
     virtual ~CommunicationChannel( );
+
+    virtual bool saveCommand() const;
 
     inline long long getOff( ) const;
     bool canHear( Character * ) const;

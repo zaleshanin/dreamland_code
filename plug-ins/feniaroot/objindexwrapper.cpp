@@ -7,7 +7,7 @@
 #include "grammar_entities_impl.h"
 #include "object.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "loadsave.h"
 
 #include "objindexwrapper.h"
@@ -140,6 +140,12 @@ NMI_GET( ObjIndexWrapper, weight , "вес предмета")
 { 
     checkTarget( ); 
     return target->weight;
+}
+
+NMI_GET( ObjIndexWrapper, level, "уровень предмета") 
+{ 
+    checkTarget( ); 
+    return target->level;
 }
 
 NMI_GET( ObjIndexWrapper, cost , "цена в серебре") 

@@ -2,10 +2,11 @@
  *
  * ruffina, 2004
  */
+#include <string.h>
 
 #include "medit.h"
 
-#include "char.h"
+
 #include "grammar_entities_impl.h"
 #include <pcharacter.h>
 #include <npcharacter.h>
@@ -21,7 +22,7 @@
 #include "interp.h"
 #include "../anatolia/handler.h"
 #include "act.h"
-#include "mercdb.h"
+
 
 #include "olc.h"
 #include "security.h"
@@ -171,14 +172,10 @@ void OLCStateMobile::commit()
         original->vnum = mob.vnum;
         original->area = mob.area;
 
-        if (mob.vnum > top_vnum_mob)
-            top_vnum_mob = mob.vnum;
-
         mob.act |= ACT_IS_NPC;
         iHash = (int) mob.vnum % MAX_KEY_HASH;
         original->next = mob_index_hash[iHash];
         mob_index_hash[iHash] = original;
-        top_mob_index++;
     }
 
 
@@ -966,11 +963,8 @@ MEDIT(race)
     }
     
     stc("Available races are:", ch);
-    
-    ostringstream out;
-    raceManager->outputAll( out, 16, 3 );
-    stc(out.str( ).c_str( ), ch );
-    stc("\n\r", ch);
+    auto raceNames = raceManager->nameList();
+    ch->pecho(print_columns(raceNames, 16, 3));
     return false;
 }
 
@@ -1049,13 +1043,11 @@ MEDIT(list)
 {
     int cnt;
     RoomIndexData *pRoom;
-    char buf[MAX_STRING_LENGTH];
     ostringstream buffer;
     
-    snprintf(buf, sizeof(buf), "Resets for mobile [{W%d{x] ({g%s{x):\n\r",
+    buffer << fmt(0, "Resets for mobile [{W%d{x] ({g%s{x):\n\r",
             mob.vnum, 
             russian_case(mob.short_descr, '1').c_str( ));
-    buffer << buf;
     
     cnt = 0;
     for (auto &r: roomIndexMap) {
@@ -1064,16 +1056,14 @@ MEDIT(list)
             switch(pReset->command) {
                 case 'M':
                     if(pReset->arg1 == mob.vnum) {
-                        snprintf(buf, sizeof(buf), "{G%c{x in room [{W%d{x] ({g%s{x)\n\r",
+                        buffer << fmt(0, "{G%c{x in room [{W%d{x] ({g%s{x)\n\r",
                                 pReset->command, pRoom->vnum, pRoom->name);
-                        buffer << buf;
                         cnt++;
                     }
             }
     }
 
-    snprintf(buf, sizeof(buf), "Total {W%d{x resets found.\n\r", cnt);
-    buffer << buf;
+    buffer << fmt(0, "Total {W%d{x resets found.\n\r", cnt);
     
     page_to_char(buffer.str( ).c_str( ), ch);
 
@@ -1162,7 +1152,7 @@ MEDIT(copy)
         return false;
     }
     
-    ch->printf("All %s copied from vnum %d (%s).\r\n",
+    ch->pecho("All %s copied from vnum %d (%s).",
                 report.c_str( ),
                 original->vnum, 
                 russian_case( original->short_descr, '1' ).c_str( ) );
@@ -1218,7 +1208,7 @@ MEDIT(average)
         }
     
     if (total == 0) {
-        ch->printf("No mobiles found in level range %d-%d.\r\n", minLevel, maxLevel);
+        ch->pecho("No mobiles found in level range %d-%d.", minLevel, maxLevel);
         return false;
     }
      
@@ -1297,7 +1287,7 @@ CMD(medit, 50, "", POS_DEAD, 103, LOG_ALWAYS,
 
         OLCStateMobile::Pointer me(NEW, pMob);
         me->attach(ch);
-        me->findCommand(ch, "show")->run(ch, "");
+        me->findCommand(ch, "show")->entryPoint(ch, "");
         return;
     }
     else if (!str_cmp(arg1, "create")) {
@@ -1352,7 +1342,7 @@ CMD(medit, 50, "", POS_DEAD, 103, LOG_ALWAYS,
             return;
         }
 
-        OLCStateMobile::Pointer(NEW, pMob)->findCommand(ch, "show")->run(ch, "noweb");
+        OLCStateMobile::Pointer(NEW, pMob)->findCommand(ch, "show")->entryPoint(ch, "noweb");
         return;
     } else if (!str_cmp(arg1, "load")) {
         if(!*argument || !is_number(argument)) {

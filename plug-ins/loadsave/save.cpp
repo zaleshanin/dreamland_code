@@ -63,7 +63,7 @@
 #include <cstring>
 #include <time.h>
 
-#include "char.h"
+
 #include "fileformatexception.h"
 #include "logstream.h"
 #include "grammar_entities_impl.h"
@@ -92,7 +92,7 @@
 
 #include "dreamland.h"
 #include "merc.h"
-#include "mercdb.h"
+
 #include "act.h"
 #include "save.h"
 #include "loadsave.h"
@@ -705,22 +705,18 @@ void fwrite_obj_0( Character *ch, Object *obj, FILE *fp, int iNest )
         }
         catch(const Exception &e)
         {
-                char buf[MAX_STRING_LENGTH];
-
                 if ( obj != 0 && obj->pIndexData != 0 )
                 {
-                        sprintf (buf,"{RSave_object: filling {Cvnum %d %s{R FAILED!!!!!!!!", obj->pIndexData->vnum, obj->getName( ));
+                        bug("{RSave_object: filling {Cvnum %d %s{R FAILED!!!!!!!!", obj->pIndexData->vnum, obj->getName( ));
                 }
                 else if ( obj !=0 && obj->getName( ) != 0 )
                 {
-                        sprintf (buf,"{RSave_object: filling {C%s{R FAILED!!!!!!!!", obj->getName( ) );
+                       bug("{RSave_object: filling {C%s{R FAILED!!!!!!!!", obj->getName( ) );
                 }
                 else
                 {
-                        sprintf (buf,"{RSave_object: filling{R FAILED!!!!!!!!" );
+                        bug("{RSave_object: filling{R FAILED!!!!!!!!" );
                 }
-
-                bug( buf, 0 );
         }
 
         return;
@@ -773,7 +769,7 @@ void fread_char_raw( PCharacter *ch, FILE *fp )
         word   = feof( fp ) ? "End" : fread_word( fp );
         fMatch = false;
 
-        switch ( Char::upper(word[0]) )
+        switch ( dl_toupper(word[0]) )
         {
         case '*':
             fMatch = true;
@@ -1144,7 +1140,7 @@ void fread_pet( PCharacter *ch, FILE *fp )
             word         = feof(fp) ? "End" : fread_word(fp);
             fMatch = false;
 
-            switch (Char::upper(word[0]))
+            switch (dl_toupper(word[0]))
             {
             case '*':
                 fMatch = true;
@@ -1411,7 +1407,7 @@ NPCharacter * fread_mob( FILE *fp )
 
             fMatch = false;
 
-            switch (Char::upper(word[0]))
+            switch (dl_toupper(word[0]))
             {
             case '*':
                     fMatch = true;
@@ -1695,7 +1691,7 @@ void fread_mlt( PCharacter *ch, FILE *fp ) {
       word   = feof( fp ) ? "End" : fread_word( fp );
     }
     if( i < 0 ) i++; // на всяк случай
-    switch( Char::upper( word[0] ) ) {
+    switch( dl_toupper( word[0] ) ) {
       case '*':
         fMatch = true;
         fread_to_eol( fp );
@@ -1805,7 +1801,7 @@ void fread_obj( Character *ch, Room *room, FILE *fp )
                     word   = feof( fp ) ? "End" : fread_word( fp );
             fMatch = false;
 
-            switch ( Char::upper(word[0]) )
+            switch ( dl_toupper(word[0]) )
             {
             case '*':
                     fMatch = true;
